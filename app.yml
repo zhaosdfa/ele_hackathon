@@ -1,4 +1,4 @@
 language: java
 script:
   - javac Server.java 
-  - java -server -Xms2g -Xmx2g -Xmn768m -classpath .  Server
+  - java -server -Xms1g -Xmx1g -Xmn768m -classpath .  Server
