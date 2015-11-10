@@ -1,4 +1,5 @@
 language: java
 script:
-  - javac Server.java 
-  - java -server -Xms1g -Xmx1g -Xmn768m -classpath .  Server
+    - javac -cp "./libs/*:." -encoding utf-8 MyHttpServer.java ExchangeUtils.java LoginHandler.java
+  - javac -cp "./libs/*:." -encoding utf-8 Server.java 
+  - java -cp "./libs/:." -server -Xms800m -Xmx800m -Xmn500m -Dfile.encoding=utf-8 Server
