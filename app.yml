@@ -1,5 +1,5 @@
 language: java
 script:
-    - javac -cp "./libs/*:." -encoding utf-8 MyHttpServer.java ExchangeUtils.java LoginHandler.java
-  - javac -cp "./libs/*:." -encoding utf-8 Server.java 
-  - java -cp "./libs/:." -server -Xms800m -Xmx800m -Xmn500m -Dfile.encoding=utf-8 Server
+  - mvn clean package
+  - java -cp "./target/server-1.0-SNAPSHOT.jar" com.sunsky.server.App
+  - java -cp "./target/server-1.0-SNAPSHOT.jar" -server -Xms800m -Xmx800m -Xmn500m -Dfile.encoding=utf-8 com.sunsky.server.App
