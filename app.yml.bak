@@ -1,5 +1,4 @@
 language: java
 script:
-  - mvn clean package
-  - java -cp "./target/server-1.0-SNAPSHOT.jar" com.sunsky.server.App
+  - mvn package
   - java -cp "./target/server-1.0-SNAPSHOT.jar" -server -Xms800m -Xmx800m -Xmn500m -Dfile.encoding=utf-8 com.sunsky.server.App
