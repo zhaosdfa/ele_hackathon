@@ -25,5 +25,7 @@ public class Utils {
 			return null;
 		}
 	}
-
+	public String getenv(String key){
+		return System.getenv(key);
+	}
 }
