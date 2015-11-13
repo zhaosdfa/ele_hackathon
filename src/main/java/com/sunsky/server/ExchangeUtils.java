@@ -80,6 +80,15 @@ public class ExchangeUtils {
 		return result;
 	}
 
+	public static String getHeader(HttpExchange exchange, String key) {
+		Headers headers = exchange.getRequestHeaders();
+		List<String> tmp = headers.get(key);
+		if (tmp != null && tmp.size() > 0) {
+			return tmp.get(0);
+		}
+		return null;
+	}
+
 	public static String getRequestBody(HttpExchange exchange, String encode) {
 		Headers headers = exchange.getRequestHeaders();
 		List<String> lens = headers.get("Content-Length");

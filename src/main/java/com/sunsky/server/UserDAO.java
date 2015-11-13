@@ -16,8 +16,9 @@ public class UserDAO {
 		// read all users from mysql to memory
 		users = new HashMap<String, User>();
 		accessTokens = new HashMap<String, String>();
+		Connection conn = null;
 		try {
-			Connection conn = DBHelper.getConnection();
+			conn = DBHelper.getConnection();
 			if (conn != null) {
 				Statement stmt = conn.createStatement();
 				String sql = "select * from user";
@@ -34,6 +35,15 @@ public class UserDAO {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			if (conn != null) {
+				//DBHelper.releaseConnection(conn);
+				try {
+					conn.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 

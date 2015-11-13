@@ -11,9 +11,15 @@ public class App {
             MyHttpServer server = new MyHttpServer();
             server.init(8080, 1000);
 
+	    // add login api
 	    LoginHandler login = new LoginHandler();
 	    login.init();
             server.createContext("/login", login);
+
+	    // add foods api
+	    FoodsHandler foods = new FoodsHandler();
+	    server.createContext("/foods", foods);
+
 
             server.start();
 
