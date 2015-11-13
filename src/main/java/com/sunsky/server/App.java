@@ -20,6 +20,9 @@ public class App {
 	    FoodsHandler foods = new FoodsHandler();
 	    server.createContext("/foods", foods);
 
+	    // add cart api
+	    CartHandler cart = new CartHandler();
+	    server.createContext("/carts", cart);
 
             server.start();
 
