@@ -9,7 +9,14 @@ public class App {
         try {
 
             MyHttpServer server = new MyHttpServer();
-            server.init(8080, 1000);
+	    int port = 8080;
+	    try {
+		    port = Integer.parseInt(System.getenv("APP_PORT"));
+	    } catch (Exception e) {
+		    e.printStackTrace();
+	    }
+
+            server.init(port, 1000);
 
 	    // add login api
 	    LoginHandler login = new LoginHandler();

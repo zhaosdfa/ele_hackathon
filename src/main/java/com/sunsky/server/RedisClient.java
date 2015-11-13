@@ -26,7 +26,13 @@ public class RedisClient {
 		config.setMaxIdle(5); 
 		//config.setMaxWait(1000l); // deprecated
 		//config.setTestOnBorrow(false); 
-		jedisPool = new JedisPool(config,"127.0.0.1",6379);
+		int port = 6379;
+		try {
+			port = Integer.parseInt(System.getenv("REDIS_PORT"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		jedisPool = new JedisPool(config, System.getenv("REDIS_HOST"), port);
 	}
 
 	public static Jedis getResource() {
