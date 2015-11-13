@@ -24,6 +24,7 @@ public class LoginHandler implements HttpHandler {
 	}
 
 	public void init() {
+		// read all users from mysql to memory
 		users = new HashMap<String, User>();
 		accessTokens = new HashMap<String, String>();
 		try {
@@ -47,71 +48,67 @@ public class LoginHandler implements HttpHandler {
 		}
 	}
 
-	private void _handle(HttpExchange httpExchange) throws IOException {
+	private ResponseResult _handle(HttpExchange httpExchange) {
 		String requestMethod = httpExchange.getRequestMethod();
 
-		/*
-		   Headers headers = httpExchange.getRequestHeaders();
-		   List<String> access = headers.get("Access-Token");
-		   String accessToken = null;
-		   if (access != null && access.size() > 0) {
-		   accessToken = access.get(0);
-		   }
-		 */
-
-
-		int responseCode = 200;
+		int bodyCode = 200;
 
 		String data = ExchangeUtils.getRequestBody(httpExchange, ENCODE);
 
-		JSONObject user = new JSONObject(data);
-
-		System.out.println("--> " + requestMethod + ", " + httpExchange.getRequestURI().toString()
-				+ ", data: " + user.getString("username"));
-
-		String username = user.getString("username");
-		String password = user.getString("password");
-
-		JSONObject response = new JSONObject();
-
-
-		if (username == null || password == null 
-				|| users.get(username) == null 
-				|| !users.get(username).getPassword().equals(password)) {
-			response.put("code", "USER_AUTH_FAIL");
-			response.put("message", "用户名或密码错误");
-			responseCode = 403;
-		} else {
-			User tuser = users.get(username);
-			response.put("user_id", tuser.getId());
-			response.put("username", username);
-			response.put("access_token", tuser.getAccessToken());
-			responseCode = 200;
+		if (data == null) {
+			JSONObject obj = new JSONObject();
+			obj.put("code", "EMPTY_REQUEST");
+			obj.put("message", "请求体为空");
+			return new ResponseResult(400, obj.toString());
 		}
 
-		String responseMsg = response.toString();
-		httpExchange.sendResponseHeaders(responseCode, responseMsg.getBytes().length);
-		OutputStream out = httpExchange.getResponseBody();
-		out.write(responseMsg.getBytes());
-		out.flush();
-		httpExchange.close();
+		JSONObject user = null;
+		String username = null;
+		String password = null;
+		try {
+			user = new JSONObject(data);
+			username = user.getString("username");
+			password = user.getString("password");
+			if (username == null || password == null) throw new Exception();
+		} catch (Exception e) {
+			JSONObject obj = new JSONObject();
+			obj.put("code", "MALFORMED_JSON");
+			obj.put("message", "格式错误");
+			return new ResponseResult(400, obj.toString());
+		}
 
+		System.out.println("--> " + requestMethod + ", username: " + user.getString("username"));
+
+		int code = 403;
+		JSONObject body = new JSONObject();
+		if (users.get(username) == null || !users.get(username).getPassword().equals(password)) {
+			body.put("code", "USER_AUTH_FAIL");
+			body.put("message", "用户名或密码错误");
+			code = 403;
+		} else {
+			User tuser = users.get(username);
+			body.put("user_id", tuser.getId());
+			body.put("username", username);
+			body.put("access_token", tuser.getAccessToken());
+			code = 200;
+		}
+
+		return new ResponseResult(code, body.toString());
 	}
 
 	public void handle(HttpExchange httpExchange) throws IOException {
 		try {
-			_handle(httpExchange);
-		} catch (Exception e) {
-			System.out.println(e);
-			JSONObject response = new JSONObject();
-			response.put("code", "MALFORMED_JSON");
-			response.put("message", "格式错误");
-			String responseMsg = response.toString();
-			httpExchange.sendResponseHeaders(400, responseMsg.getBytes().length);
+			System.out.println("a request arrived");
+			ResponseResult result = _handle(httpExchange);
+			String responseMsg = result.getBody();
+			System.out.println("code: " + result.getCode() + " " + responseMsg);
+			httpExchange.sendResponseHeaders(result.getCode(), responseMsg.getBytes().length);
 			OutputStream out = httpExchange.getResponseBody();
 			out.write(responseMsg.getBytes());
 			out.flush();
 			httpExchange.close();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
