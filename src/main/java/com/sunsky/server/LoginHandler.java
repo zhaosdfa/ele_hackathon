@@ -4,48 +4,18 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.Headers;
 import java.io.*;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import org.json.JSONObject;
 import org.json.JSONArray;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
 
 public class LoginHandler implements HttpHandler {
 
 	private static final String ENCODE = "utf-8";
 
-	private Map<String, User> users;
-	private Map<String, String> accessTokens;
 
 	public LoginHandler() {
 	}
 
 	public void init() {
-		// read all users from mysql to memory
-		users = new HashMap<String, User>();
-		accessTokens = new HashMap<String, String>();
-		try {
-			Connection conn = DBHelper.getConnection();
-			if (conn != null) {
-				Statement stmt = conn.createStatement();
-				String sql = "select * from user";
-				ResultSet rs = stmt.executeQuery(sql);
-				while (rs.next()) {
-					User user = new User();
-					user.setId(rs.getInt("id"));
-					user.setName(rs.getString("name"));
-					user.setPassword(rs.getString("password"));
-					user.setAccessToken(Utils.MD5(user.getName()));
-					users.put(user.getName(), user);
-					accessTokens.put(user.getAccessToken(), user.getName());
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	private ResponseResult _handle(HttpExchange httpExchange) {
@@ -81,12 +51,12 @@ public class LoginHandler implements HttpHandler {
 
 		int code = 403;
 		JSONObject body = new JSONObject();
-		if (users.get(username) == null || !users.get(username).getPassword().equals(password)) {
+		User tuser = null;
+		if ((tuser = UserDAO.get(username)) == null || !tuser.getPassword().equals(password)) {
 			body.put("code", "USER_AUTH_FAIL");
 			body.put("message", "用户名或密码错误");
 			code = 403;
 		} else {
-			User tuser = users.get(username);
 			body.put("user_id", tuser.getId());
 			body.put("username", username);
 			body.put("access_token", tuser.getAccessToken());
