@@ -23,7 +23,7 @@ public class DBHelper {
 
 		try {
 			BoneCPConfig config = new BoneCPConfig();
-			config.setJdbcUrl("jdbc:mysql://127.0.0.1:4306/eleme");
+			config.setJdbcUrl("jdbc:mysql://127.0.0.1:3306/eleme");
 			config.setUsername("root");
 			config.setPassword("toor");
 			config.setMinConnectionsPerPartition(5);

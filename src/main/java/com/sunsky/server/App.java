@@ -9,7 +9,7 @@ public class App {
         try {
 
             MyHttpServer server = new MyHttpServer();
-            server.init(8888, 1000);
+            server.init(8080, 1000);
 
 	    LoginHandler login = new LoginHandler();
 	    login.init();
