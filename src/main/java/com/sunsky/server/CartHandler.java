@@ -98,9 +98,8 @@ public class CartHandler implements HttpHandler {
 			foodId = body.getInt("food_id");
 			foodCount = body.getInt("count");
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
-
-		int count = CartDAO.getLength(cartId);
 
 		if (!FoodsDAO.exists(foodId)) {
 			JSONObject obj = new JSONObject();
@@ -109,16 +108,14 @@ public class CartHandler implements HttpHandler {
 			return new ResponseResult(404, obj.toString());
 		}
 
-		if (count + foodCount > 3) {
+		if (foodCount > 3 || !CartDAO.addFood(cartId, foodId, foodCount)) {
 			JSONObject obj = new JSONObject();
 			obj.put("code", "FOOD_OUT_OF_LIMIT");
 			obj.put("message", "篮子中食物数量超过了三个");
 			return new ResponseResult(403, obj.toString());
 		}
 
-		CartDAO.addFood(cartId, foodId, foodCount);
-
-		return new ResponseResult(200, "");
+		return new ResponseResult(204, "");
 	}
 
 }

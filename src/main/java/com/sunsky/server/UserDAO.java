@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
+import redis.clients.jedis.*;
 
 public class UserDAO {
 
@@ -61,6 +62,17 @@ public class UserDAO {
 		String name = accessTokens.get(accessToken);
 		if (name == null) return null;
 		return users.get(name);
+	}
+
+	private static final String KEY_USR_ORDER_ID = "user_order_id:";
+
+	public static String getOrderId(int userId) {
+		Jedis jedis = RedisClient.getResource();
+
+		String orderId = jedis.get(KEY_USR_ORDER_ID + userId);
+
+		RedisClient.returnResource(jedis);
+		return  orderId;
 	}
 
 }

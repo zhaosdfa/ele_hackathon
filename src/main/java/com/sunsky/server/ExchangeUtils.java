@@ -101,7 +101,7 @@ public class ExchangeUtils {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("len: " + length);
+		//System.out.println("len: " + length);
 		if (length <= 0) {
 			return null;
 		}

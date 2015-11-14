@@ -31,6 +31,9 @@ public class App {
 	    CartHandler cart = new CartHandler();
 	    server.createContext("/carts", cart);
 
+	    OrderHandler order = new OrderHandler();
+	    server.createContext("/orders", order);
+
             server.start();
 
 	    System.out.println("server started");

@@ -4,3 +4,5 @@
 *.log
 *.class
 *.swp
+*.txt~
+tests/__pycache__/*
