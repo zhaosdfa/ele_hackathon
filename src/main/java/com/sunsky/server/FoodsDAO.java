@@ -39,7 +39,7 @@ public class FoodsDAO {
 				}
 			}
 			if (pipe != null) {
-				pipe.syncAndReturn();
+				pipe.sync();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
