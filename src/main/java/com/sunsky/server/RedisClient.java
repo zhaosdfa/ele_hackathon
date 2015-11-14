@@ -23,7 +23,8 @@ public class RedisClient {
 	static {
 		JedisPoolConfig config = new JedisPoolConfig(); 
 		//config.setMaxActive(20); // deprecated. I didn't know. https://github.com/xetorthio/jedis/issues/849
-		config.setMaxIdle(5); 
+		config.setMaxIdle(10); 
+		config.setMaxTotal(60);
 		//config.setMaxWait(1000l); // deprecated
 		//config.setTestOnBorrow(false); 
 		int port = 6379;

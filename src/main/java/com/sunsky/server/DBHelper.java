@@ -21,7 +21,7 @@ public class DBHelper {
 			config.setPassword(System.getenv("DB_PASS"));
 			config.setMinConnectionsPerPartition(5);
 			config.setAcquireIncrement(5);
-			config.setMaxConnectionsPerPartition(100);
+			config.setMaxConnectionsPerPartition(200);
 			config.setPartitionCount(1);
 			connectionPool = new BoneCP(config); // setup the connection pool
 		} catch (Exception e) {
