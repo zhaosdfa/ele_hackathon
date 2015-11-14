@@ -15,9 +15,11 @@ public class CartHandler implements HttpHandler {
 			ResponseResult result = _handle(httpExchange);
 			String body = result.getBody();
 			httpExchange.sendResponseHeaders(result.getCode(), body.getBytes().length);
-			OutputStream out = httpExchange.getResponseBody();
-			out.write(body.getBytes());
-			out.flush();
+			if (result.getCode() != 204) {
+				OutputStream out = httpExchange.getResponseBody();
+				out.write(body.getBytes());
+				out.flush();
+			}
 			httpExchange.close();
 		} catch (Exception e) {
 			e.printStackTrace();

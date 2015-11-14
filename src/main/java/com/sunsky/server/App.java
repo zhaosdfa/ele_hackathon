@@ -4,43 +4,51 @@ import java.io.IOException;
 import com.sun.net.httpserver.HttpHandler;
 
 public class App {
-    public static void main( String[] args ) {
+	public static void main( String[] args ) {
 
-        try {
+		try {
 
-            MyHttpServer server = new MyHttpServer();
-	    int port = 8080;
-	    try {
-		    port = Integer.parseInt(System.getenv("APP_PORT"));
-	    } catch (Exception e) {
-		    e.printStackTrace();
-	    }
+			System.out.println("loading...");
+			UserDAO dao = new UserDAO();
+			FoodsDAO fd = new FoodsDAO();
+			System.out.println("loaded");
 
-            server.init(port, 1000);
+			MyHttpServer server = new MyHttpServer();
+			int port = 8080;
+			try {
+				port = Integer.parseInt(System.getenv("APP_PORT"));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
-	    // add login api
-	    LoginHandler login = new LoginHandler();
-	    login.init();
-            server.createContext("/login", login);
+			server.init(port, 1000);
 
-	    // add foods api
-	    FoodsHandler foods = new FoodsHandler();
-	    server.createContext("/foods", foods);
+			// add login api
+			LoginHandler login = new LoginHandler();
+			login.init();
+			server.createContext("/login", login);
 
-	    // add cart api
-	    CartHandler cart = new CartHandler();
-	    server.createContext("/carts", cart);
+			// add foods api
+			FoodsHandler foods = new FoodsHandler();
+			server.createContext("/foods", foods);
 
-	    OrderHandler order = new OrderHandler();
-	    server.createContext("/orders", order);
+			// add cart api
+			CartHandler cart = new CartHandler();
+			server.createContext("/carts", cart);
 
-            server.start();
+			OrderHandler order = new OrderHandler();
+			server.createContext("/orders", order);
 
-	    System.out.println("server started");
+			AdminHandler admin = new AdminHandler();
+			server.createContext("/admin/orders", admin);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+			server.start();
 
-    }
+			System.out.println("server started");
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
 }

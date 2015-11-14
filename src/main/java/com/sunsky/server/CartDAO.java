@@ -2,6 +2,7 @@ package com.sunsky.server;
 
 import redis.clients.jedis.*;
 import java.util.*;
+import org.json.*;
 
 public class CartDAO {
 
@@ -14,6 +15,8 @@ public class CartDAO {
 	private static final String KEY_CART_TOTAL = "cart_total:";
 
 	private static final String KEY_ORDER_CONTENT = "order_content:";
+
+	private static final String KEY_ALL_ORDERS = "all_orders";
 
 	/**
 	  * return cart id
@@ -113,22 +116,43 @@ public class CartDAO {
 
 		Map<String, String> foods = jedis.hgetAll(KEY_CART_CONTENT + cartId);
 
+		JSONObject ord = new JSONObject();
+		ord.put("id", cartId);
+		ord.put("user_id", userId);
+
+		int total = 0;
+
+		JSONArray items = new JSONArray();
+		int itemsIndex = 0;
+
 		boolean outOfStock = false;
 		// watch foods
 		Map<String, String> newFoods = new HashMap<String, String>();
 		for (Map.Entry<String, String> entry : foods.entrySet()) {
 			jedis.watch(FoodsDAO.KEY_FOOD_STOCK + entry.getKey());
 			try {
-				Long newStock = Long.valueOf(jedis.get(FoodsDAO.KEY_FOOD_STOCK + entry.getKey()))
-					- Long.valueOf(entry.getValue());
-				if (newStock.intValue() < 0) {
-					outOfStock = true;
+				int fid = Integer.parseInt(entry.getKey());
+				int cnt = Integer.parseInt(entry.getValue());
+				if (cnt > 0) {
+					JSONObject it = new JSONObject();
+					it.put("food_id", fid);
+					it.put("count", cnt);
+					items.put(itemsIndex++, it);
+					total += FoodsDAO.getPrice(fid) * cnt;
+					Long newStock = Long.valueOf(jedis.get(FoodsDAO.KEY_FOOD_STOCK + entry.getKey()))
+						- Long.valueOf(entry.getValue());
+					if (newStock.intValue() < 0) {
+						outOfStock = true;
+					}
+					newFoods.put(entry.getKey(), newStock.toString());
 				}
-				newFoods.put(entry.getKey(), newStock.toString());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+
+		ord.put("total", total);
+		ord.put("items", items);
 
 		String orderId = jedis.get(KEY_USR_ORDER_ID + userId);
 
@@ -140,6 +164,7 @@ public class CartDAO {
 			return outOfStock ? Result.OUT_OF_STOCK : Result.OUT_OF_LIMIT;
 		}
 
+
 		Transaction tx = jedis.multi();
 
 		tx.set(KEY_USR_ORDER_ID + userId, cartId);
@@ -147,15 +172,35 @@ public class CartDAO {
 			tx.set(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), entry.getValue());
 		}
 		tx.hmset(KEY_ORDER_CONTENT + cartId, foods);
+		tx.lpush(KEY_ALL_ORDERS, ord.toString());
 		List<Object> list = tx.exec();
 		if (list == null || list.size() == 0) {
 			System.out.println("transaction: -> FAILED");
 			return Result.FAIL;
 		}
 		for (Object str : list) {
-			System.out.println("transaction: -> " + (String) str);
+			System.out.println("transaction: -> " + str);
 		}
 		return Result.OK;
+	}
+
+	public static String getOrders() {
+		Jedis jedis = RedisClient.getResource();
+		List<String> list = jedis.lrange(KEY_ALL_ORDERS, 0, -1);
+		if (list == null || list.size() == 0) {
+			return "";
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append("[");
+		boolean first = true;
+		for (String s : list) {
+			if (!first) builder.append(",");
+			first = false;
+			builder.append(s);
+		}
+		builder.append("]");
+		RedisClient.returnResource(jedis);
+		return builder.toString();
 	}
 
 }
