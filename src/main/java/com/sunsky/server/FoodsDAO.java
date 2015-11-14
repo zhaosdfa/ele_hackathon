@@ -92,6 +92,7 @@ public class FoodsDAO {
 			try {
 				String t = (String) it.next();
 				stock = Integer.parseInt(t);
+				f.setStock(stock);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

@@ -17,7 +17,6 @@ import redis.clients.jedis.SortingParams;
 
 public class RedisClient {
 
-	private static Jedis jedis;
 	private static JedisPool jedisPool;
 
 	static {
@@ -34,6 +33,9 @@ public class RedisClient {
 			e.printStackTrace();
 		}
 		jedisPool = new JedisPool(config, System.getenv("REDIS_HOST"), port);
+		Jedis jedis =jedisPool.getResource();
+		jedis.flushAll();
+		jedisPool.returnResource(jedis);
 	}
 
 	public static Jedis getResource() {
