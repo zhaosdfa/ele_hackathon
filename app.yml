@@ -1,4 +1,4 @@
 language: java
 script:
   - mvn package
-  - java -cp "./target/server-1.0-SNAPSHOT.jar" -server -Xms1g -Xmx1g -Xmn768m -Dfile.encoding=utf-8 com.sunsky.server.App
+  - java -cp "./target/server-1.0-SNAPSHOT.jar" -server -Xms2g -Xmx2g -Xmn768m -Dfile.encoding=utf-8 com.sunsky.server.App
