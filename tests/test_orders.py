@@ -28,8 +28,7 @@ def cart_id(url, token):
 def test_get_orders(url, token):
     res = jget(url + "/orders", token)
     assert res.status_code == 200
-#print "res.json---+++++++--->" + res.json()
-#    assert len(res.json()) == 0
+    assert len(res.json()) == 0
 
 
 def test_add_food_success(url, token, cart_id):

@@ -255,9 +255,9 @@ public class CartDAO {
 	public static String getOrders() {
 		Jedis jedis = RedisClient.getResource();
 		List<String> list = jedis.lrange(KEY_ALL_ORDERS, 0, -1);
-		if (list == null || list.size() == 0) {
-			return "";
-		}
+//		if (list == null || list.size() == 0) {
+//			return "";
+//		}
 		System.out.println("list size: " + list.size());
 		StringBuilder builder = new StringBuilder();
 		builder.append("[");

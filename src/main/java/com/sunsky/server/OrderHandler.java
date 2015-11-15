@@ -122,7 +122,7 @@ public class OrderHandler implements HttpHandler {
 		JSONArray arr = new JSONArray();
 		int arrIndex = 0;
 		if (orderId == null) {
-			return new ResponseResult(200, "".toString());
+			return new ResponseResult(200, "[]".toString());
 		}
 		JSONObject obj = new JSONObject();
 		obj.put("id", orderId);
