@@ -53,6 +53,7 @@ public class CartDAO {
 
 	
 	// foodCount maybe < 0
+	// this function may have race condition , may be need use transaction
 	public static boolean addFood(String cartId, int foodId, int foodCount) {
 		Jedis jedis = RedisClient.getResource();
 		int cur = jedis.incrBy(KEY_CART_TOTAL + cartId, foodCount).intValue();
@@ -63,7 +64,10 @@ public class CartDAO {
 			jedis.incrBy(KEY_CART_TOTAL + cartId, -foodCount);
 			flag = false;
 		}
-		jedis.hincrBy(KEY_CART_CONTENT + cartId, ""+foodId, foodCount);
+		// should flag == true
+		if (flag == true){
+			jedis.hincrBy(KEY_CART_CONTENT + cartId, ""+foodId, foodCount);
+		}
 		RedisClient.returnResource(jedis);
 		return flag;
 	}
