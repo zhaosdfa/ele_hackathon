@@ -102,12 +102,80 @@ public class CartDAO {
 
 	public static Result tryOrder(String cartId, int userId) {
 		Jedis jedis = RedisClient.getResource();
+//		Result res = _tryOrderV2(cartId, userId, jedis);
+//		if (res != Result.OK) res = _tryOrderV2(cartId, userId, jedis);
 		Result res = null;
+		int cnt = 0;
 		do {
 			res = _tryOrder(cartId, userId, jedis);
-		} while (res == Result.FAIL);
+		} while (res == Result.FAIL && cnt++ <= 10);
 		RedisClient.returnResource(jedis);
 		return res;
+	}
+
+	private static final String KEY_USR_ORDER_NUM = "user_order_num:";
+	private static Result _tryOrderV2(String cartId, int userId, Jedis jedis) {
+		int orderNum = jedis.incr(KEY_USR_ORDER_NUM + userId).intValue();
+		if (orderNum > 1) {
+			return Result.OUT_OF_LIMIT;
+		}
+
+		Map<String, String> foods = jedis.hgetAll(KEY_CART_CONTENT + cartId);
+		JSONObject ord = new JSONObject();
+		ord.put("id", cartId);
+		ord.put("user_id", userId);
+
+		int total = 0;
+		JSONArray items = new JSONArray();
+		int itemsIndex = 0;
+
+		boolean outOfStock = false;
+		for (Map.Entry<String, String> entry : foods.entrySet()) {
+			try {
+				int fid = Integer.parseInt(entry.getKey());
+				int cnt = Integer.parseInt(entry.getValue());
+				if (cnt > 0) {
+					int t = jedis.incrBy(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), cnt).intValue();
+					if (t < 0) {
+						outOfStock = true;
+						continue ;
+					}
+					JSONObject it = new JSONObject();
+					it.put("food_id", fid);
+					it.put("count", cnt);
+					items.put(itemsIndex++, it);
+
+					total += FoodsDAO.getPrice(fid) * cnt;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (outOfStock) {
+			for (Map.Entry<String, String> entry : foods.entrySet()) {
+				try {
+					int fid = Integer.parseInt(entry.getKey());
+					int cnt = Integer.parseInt(entry.getValue());
+					if (cnt > 0) {
+						int t = jedis.incrBy(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), -cnt).intValue();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+			}
+			return Result.OUT_OF_STOCK;
+		}
+
+		jedis.set(KEY_USR_ORDER_ID + userId, cartId);
+
+		ord.put("total", total);
+		ord.put("items", items);
+
+		jedis.lpush(KEY_ALL_ORDERS, ord.toString());
+
+		return Result.OK;
 	}
 
 	// TODO 
@@ -190,6 +258,7 @@ public class CartDAO {
 		if (list == null || list.size() == 0) {
 			return "";
 		}
+		System.out.println("list size: " + list.size());
 		StringBuilder builder = new StringBuilder();
 		builder.append("[");
 		boolean first = true;

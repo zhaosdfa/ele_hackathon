@@ -16,7 +16,9 @@ public class DBHelper {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			BoneCPConfig config = new BoneCPConfig();
-			config.setJdbcUrl("jdbc:mysql://127.0.0.1:3306/eleme");
+			String connStr = "jdbc:mysql://" + System.getenv("DB_HOST")
+				+ ":" + System.getenv("DB_PORT") + "/" + System.getenv("DB_NAME");
+			config.setJdbcUrl(connStr);
 			config.setUsername(System.getenv("DB_USER"));
 			config.setPassword(System.getenv("DB_PASS"));
 			config.setMinConnectionsPerPartition(5);

@@ -10,7 +10,7 @@ import java.lang.Math;
 
 public class ExchangeUtils {
 
-	public static final int BUFFER_SIZE = 1024;
+	public static final int BUFFER_SIZE = 64;
 
 	public static final String ENCODE = "utf-8";
 
