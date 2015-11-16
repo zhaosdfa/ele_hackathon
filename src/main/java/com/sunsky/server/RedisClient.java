@@ -17,33 +17,33 @@ import redis.clients.jedis.SortingParams;
 
 public class RedisClient {
 
-	private static JedisPool jedisPool;
+    private static JedisPool jedisPool;
 
-	static {
-		JedisPoolConfig config = new JedisPoolConfig(); 
-		//config.setMaxActive(20); // deprecated. I didn't know. https://github.com/xetorthio/jedis/issues/849
-		config.setMaxIdle(10); 
-		config.setMaxTotal(60);
-		//config.setMaxWait(1000l); // deprecated
-		//config.setTestOnBorrow(false); 
-		int port = 6379;
-		try {
-			port = Integer.parseInt(System.getenv("REDIS_PORT"));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		jedisPool = new JedisPool(config, System.getenv("REDIS_HOST"), port);
-		Jedis jedis =jedisPool.getResource();
-		jedis.flushAll();
-		jedisPool.returnResource(jedis);
+    static {
+	JedisPoolConfig config = new JedisPoolConfig(); 
+	//config.setMaxActive(20); // deprecated. I didn't know. https://github.com/xetorthio/jedis/issues/849
+	config.setMaxIdle(10); 
+	config.setMaxTotal(60);
+	//config.setMaxWait(1000l); // deprecated
+	//config.setTestOnBorrow(false); 
+	int port = 6379;
+	try {
+	    port = Integer.parseInt(System.getenv("REDIS_PORT"));
+	} catch (Exception e) {
+	    e.printStackTrace();
 	}
+	jedisPool = new JedisPool(config, System.getenv("REDIS_HOST"), port);
+	Jedis jedis =jedisPool.getResource();
+	jedis.flushAll();
+	jedisPool.returnResource(jedis);
+    }
 
-	public static Jedis getResource() {
-		return jedisPool.getResource();
-	}
+    public static Jedis getResource() {
+	return jedisPool.getResource();
+    }
 
-	public static void returnResource(Jedis jedis) {
-		jedisPool.returnResource(jedis);
-	}
+    public static void returnResource(Jedis jedis) {
+	jedisPool.returnResource(jedis);
+    }
 
 }

@@ -27,17 +27,17 @@ public class MyHttpServer {
      * backlog: maxinum number of 
      */
     public void init(int port, int backlog) throws IOException {
-		HttpServerProvider provider = HttpServerProvider.provider();
-		server = provider.createHttpServer(new InetSocketAddress(port), backlog); 
-		server.setExecutor(null);
+	HttpServerProvider provider = HttpServerProvider.provider();
+	server = provider.createHttpServer(new InetSocketAddress(port), backlog); 
+	server.setExecutor(null);
     }
 
     public void createContext(String uri, HttpHandler handler) {
-        server.createContext(uri, handler);
+	server.createContext(uri, handler);
     }
 
-	public void start() {
-		server.start();
-	}
+    public void start() {
+	server.start();
+    }
 
 }
