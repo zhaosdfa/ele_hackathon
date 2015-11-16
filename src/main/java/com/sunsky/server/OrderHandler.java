@@ -95,7 +95,7 @@ public class OrderHandler implements HttpHandler {
 	    JSONObject obj = new JSONObject();
 	    obj.put("code", "NOT_AUTHORIZED_TO_ACCESS_CART");
 	    obj.put("message", "无权限访问指定的篮子");
-	    return new ResponseResult(401, obj.toString());
+	    return new ResponseResult(403, obj.toString());
 	}
 
 	CartDAO.Result res = CartDAO.tryOrder(cartId, userId);
