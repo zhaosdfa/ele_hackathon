@@ -53,6 +53,7 @@ public class CartDAO {
 
 
     // foodCount maybe < 0
+    // this function may have race condition , may be need use transaction
     public static boolean addFood(String cartId, int foodId, int foodCount) {
 	Jedis jedis = RedisClient.getResource();
 	int cur = jedis.incrBy(KEY_CART_TOTAL + cartId, foodCount).intValue();
@@ -63,7 +64,9 @@ public class CartDAO {
 	    jedis.incrBy(KEY_CART_TOTAL + cartId, -foodCount);
 	    flag = false;
 	}
-	jedis.hincrBy(KEY_CART_CONTENT + cartId, ""+foodId, foodCount);
+	if (flag) {
+	    jedis.hincrBy(KEY_CART_CONTENT + cartId, ""+foodId, foodCount);
+	}
 	RedisClient.returnResource(jedis);
 	return flag;
     }
@@ -91,7 +94,7 @@ public class CartDAO {
     private static String getOrderId(int userId) {
 	Jedis jedis = RedisClient.getResource();
 
-	//String orderId = jedis.hset(KEY_USR_ORDER + userId);
+//	String orderId = jedis.hset(KEY_USR_ORDER + userId);
 
 	RedisClient.returnResource(jedis);
 	return  null;
@@ -102,8 +105,8 @@ public class CartDAO {
 
     public static Result tryOrder(String cartId, int userId) {
 	Jedis jedis = RedisClient.getResource();
-	//		Result res = _tryOrderV2(cartId, userId, jedis);
-	//		if (res != Result.OK) res = _tryOrderV2(cartId, userId, jedis);
+//	Result res = _tryOrderV2(cartId, userId, jedis);
+//	if (res != Result.OK) res = _tryOrderV2(cartId, userId, jedis);
 	Result res = null;
 	int cnt = 0;
 	do {
@@ -151,7 +154,7 @@ public class CartDAO {
 		e.printStackTrace();
 	    }
 	}
-
+	
 	if (outOfStock) {
 	    for (Map.Entry<String, String> entry : foods.entrySet()) {
 		try {
@@ -225,10 +228,10 @@ public class CartDAO {
 	String orderId = jedis.get(KEY_USR_ORDER_ID + userId);
 
 	if (outOfStock || orderId != null) {
-	    //jedis.unwatch(KEY_USR_ORDER_ID + userId, KEY_CART_CONTENT + cartId);
-	    //for (Map.Entry<String, String> entry : foods.entrySet()) {
-	    //jedis.unwatch(FoodsDAO.KEY_FOOD_STOCK + entry.getKey());
-	    //}
+//	    jedis.unwatch(KEY_USR_ORDER_ID + userId, KEY_CART_CONTENT + cartId);
+//	    for (Map.Entry<String, String> entry : foods.entrySet()) {
+//		jedis.unwatch(FoodsDAO.KEY_FOOD_STOCK + entry.getKey());
+//	    }
 	    return outOfStock ? Result.OUT_OF_STOCK : Result.OUT_OF_LIMIT;
 	}
 
@@ -255,10 +258,6 @@ public class CartDAO {
     public static String getOrders() {
 	Jedis jedis = RedisClient.getResource();
 	List<String> list = jedis.lrange(KEY_ALL_ORDERS, 0, -1);
-	//		if (list == null || list.size() == 0) {
-	//			return "";
-	//		}
-	System.out.println("list size: " + list.size());
 	StringBuilder builder = new StringBuilder();
 	builder.append("[");
 	boolean first = true;
