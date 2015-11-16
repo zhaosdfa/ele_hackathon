@@ -1,9 +1,13 @@
 package com.sunsky.server;
 
 import java.io.IOException;
-import com.sun.net.httpserver.HttpHandler;
+//import com.sun.net.httpserver.HttpHandler;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.*;
 
 public class App {
+
     public static void main( String[] args ) {
 
 	try {
@@ -13,7 +17,7 @@ public class App {
 	    FoodsDAO fd = new FoodsDAO();
 	    System.out.println("loaded");
 
-	    MyHttpServer server = new MyHttpServer();
+
 	    int port = 8080;
 	    try {
 		port = Integer.parseInt(System.getenv("APP_PORT"));
@@ -21,32 +25,24 @@ public class App {
 		e.printStackTrace();
 	    }
 
-	    server.init(port, 1000);
+	    Server server = new Server(port);
 
-	    // add login api
-	    LoginHandler login = new LoginHandler();
-	    login.init();
-	    server.createContext("/login", login);
+	    ServletHandler handler = new ServletHandler();
+	    server.setHandler(handler);
 
-	    // add foods api
-	    FoodsHandler foods = new FoodsHandler();
-	    server.createContext("/foods", foods);
-
-	    // add cart api
-	    CartHandler cart = new CartHandler();
-	    server.createContext("/carts", cart);
-
-	    OrderHandler order = new OrderHandler();
-	    server.createContext("/orders", order);
-
-	    AdminHandler admin = new AdminHandler();
-	    server.createContext("/admin/orders", admin);
+	    handler.addServletWithMapping(LoginServlet.class, "/login");
+	    handler.addServletWithMapping(FoodsServlet.class, "/foods");
+	    handler.addServletWithMapping(CartServlet.class, "/carts");
+	    handler.addServletWithMapping(CartServlet.class, "/carts/*");
+	    handler.addServletWithMapping(OrderServlet.class, "/orders");
+	    handler.addServletWithMapping(AdminServlet.class, "/admin/orders");
 
 	    server.start();
+	    server.join();
 
 	    System.out.println("server started");
 
-	} catch (IOException e) {
+	} catch (Exception e) {
 	    e.printStackTrace();
 	}
 
