@@ -6,3 +6,5 @@
 *.swp
 *.txt~
 tests/__pycache__/*
+tests/.cache/*
+tests/conftest.pyc
