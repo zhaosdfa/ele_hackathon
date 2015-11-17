@@ -4,7 +4,11 @@ import java.io.IOException;
 //import com.sun.net.httpserver.HttpHandler;
 
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.servlet.*;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 public class App {
 
@@ -25,7 +29,32 @@ public class App {
 		e.printStackTrace();
 	    }
 
-	    Server server = new Server(port);
+	    // Setup Threadpool
+	    QueuedThreadPool threadPool = new QueuedThreadPool();
+	    threadPool.setMaxThreads(500);
+
+	    // HTTP Configuration
+	    HttpConfiguration http_config = new HttpConfiguration();
+	    //http_config.setSecureScheme("https");
+	    //http_config.setSecurePort(8443);
+	    //http_config.setOutputBufferSize(32768);
+	    //http_config.setRequestHeaderSize(8192);
+	    //http_config.setResponseHeaderSize(8192);
+	    http_config.setSendServerVersion(false);
+	    http_config.setSendDateHeader(false);
+	    // httpConfig.addCustomizer(new ForwardedRequestCustomizer());
+
+
+	    Server server = new Server(threadPool);
+
+	    // === jetty-http.xml ===
+	    ServerConnector http = new ServerConnector(server,
+		    new HttpConnectionFactory(http_config));
+	    http.setPort(port);
+	    http.setIdleTimeout(10000);
+
+	    server.addConnector(http);
+
 
 	    ServletHandler handler = new ServletHandler();
 	    server.setHandler(handler);

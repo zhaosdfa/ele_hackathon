@@ -75,7 +75,7 @@ public class OrderServlet extends HttpServlet {
 
 	String cartId = null;
 	try {
-	    System.out.println("data: " + data);
+	    Utils.println("data: " + data);
 	    cartId = new JSONObject(data).getString("cart_id");
 	} catch (Exception e) {
 	    e.printStackTrace();

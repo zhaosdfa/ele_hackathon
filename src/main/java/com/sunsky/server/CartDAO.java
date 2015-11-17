@@ -18,6 +18,8 @@ public class CartDAO {
 
     private static final String KEY_ALL_ORDERS = "all_orders";
 
+    private static int failCount = 0;
+
     /**
      * return cart id
      */
@@ -108,10 +110,15 @@ public class CartDAO {
 //	Result res = _tryOrderV2(cartId, userId, jedis);
 //	if (res != Result.OK) res = _tryOrderV2(cartId, userId, jedis);
 	Result res = null;
-	int cnt = 0;
+	int cnt = 1;
 	do {
 	    res = _tryOrder(cartId, userId, jedis);
-	} while (res == Result.FAIL && cnt++ <= 10);
+	} while (res == Result.FAIL && ++cnt <= 5);
+	if (cnt > 1) {
+	    failCount++;
+	    Utils.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
+	    System.out.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
+	}
 	RedisClient.returnResource(jedis);
 	return res;
     }
@@ -247,10 +254,11 @@ public class CartDAO {
 	List<Object> list = tx.exec();
 	if (list == null || list.size() == 0) {
 	    System.out.println("transaction: -> FAILED");
+	    Utils.println("transaction: -> FAILED");
 	    return Result.FAIL;
 	}
 	for (Object str : list) {
-	    System.out.println("transaction: -> " + str);
+	    Utils.println("transaction: -> " + str);
 	}
 	return Result.OK;
     }

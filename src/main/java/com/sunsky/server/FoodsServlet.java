@@ -51,7 +51,8 @@ public class FoodsServlet extends HttpServlet {
 	    obj.put("message", "无效的令牌");
 	    return new ResponseResult(401, obj.toString());
 	}
-	List<Food> list = FoodsDAO.getAllFoods();
+//	List<Food> list = FoodsDAO.getAllFoods();
+	List<Food> list = FoodsDAO.getAllFoodsV2();
 	JSONArray foods = new JSONArray();
 	int count = 0;
 	for (Food food : list) {

@@ -5,6 +5,15 @@ public class Food {
     private int price;
     private int stock;
 
+    public Food() {
+    }
+
+    public Food(int id, int price, int stock) {
+	this.id = id;
+	this.price = price;
+	this.stock = stock;
+    }
+
     public int getId() {
 	return id;
     }
@@ -18,7 +27,7 @@ public class Food {
     }
 
     public void setPrice(int price) {
-	this.price= price;
+	this.price = price;
     }
 
     public int getStock() {

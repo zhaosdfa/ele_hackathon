@@ -87,7 +87,7 @@ public class CartServlet extends HttpServlet {
 	    userId = Integer.parseInt(str);
 	    exist = true;
 	} catch (Exception e) {
-	    e.printStackTrace();
+	    Utils.print(e);
 	}
 
 	if (!exist) {
