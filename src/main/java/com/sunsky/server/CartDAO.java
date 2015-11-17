@@ -113,7 +113,7 @@ public class CartDAO {
 	int cnt = 1;
 	do {
 	    res = _tryOrder(cartId, userId, jedis);
-	} while (res == Result.FAIL && ++cnt <= 5);
+	} while (res == Result.FAIL && ++cnt <= 4);
 	if (cnt > 1) {
 	    failCount++;
 	    Utils.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
