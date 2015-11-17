@@ -111,7 +111,7 @@ public class CartDAO {
 	int cnt = 0;
 	do {
 	    res = _tryOrder(cartId, userId, jedis);
-	} while (res == Result.FAIL && cnt++ <= 10);
+	} while (res == Result.FAIL && cnt++ <= 2);
 	RedisClient.returnResource(jedis);
 	return res;
     }
