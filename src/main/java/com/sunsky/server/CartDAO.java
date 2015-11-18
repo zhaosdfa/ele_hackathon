@@ -122,7 +122,7 @@ public class CartDAO {
 	}
 	if (cnt > LIMIT && res != Result.OK) {
 	    res = Result.OK;
-	    //justDoIt(cartId, userId, jedis);
+	    justDoIt(cartId, userId, jedis);
 	}
 	RedisClient.returnResource(jedis);
 	return res;
