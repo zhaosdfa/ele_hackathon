@@ -32,6 +32,7 @@ public class App {
 	    // Setup Threadpool
 	    QueuedThreadPool threadPool = new QueuedThreadPool();
 	    threadPool.setMaxThreads(500);
+	    threadPool.setMinThreads(100);
 
 	    // HTTP Configuration
 	    HttpConfiguration http_config = new HttpConfiguration();
@@ -45,6 +46,7 @@ public class App {
 	    // httpConfig.addCustomizer(new ForwardedRequestCustomizer());
 
 
+//	    Server server = new Server(port);
 	    Server server = new Server(threadPool);
 
 	    // === jetty-http.xml ===

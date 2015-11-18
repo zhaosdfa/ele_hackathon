@@ -111,22 +111,69 @@ public class CartDAO {
 //	if (res != Result.OK) res = _tryOrderV2(cartId, userId, jedis);
 	Result res = null;
 	int cnt = 1;
+	final int LIMIT = 3;
 	do {
 	    res = _tryOrder(cartId, userId, jedis);
-	} while (res == Result.FAIL && ++cnt <= 4);
+	} while (res == Result.FAIL && ++cnt <= LIMIT);
 	if (cnt > 1) {
 	    failCount++;
 	    Utils.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
 	    System.out.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
 	}
+	if (cnt > LIMIT && res != Result.OK) {
+	    res = Result.OK;
+	    //justDoIt(cartId, userId, jedis);
+	}
 	RedisClient.returnResource(jedis);
 	return res;
+    }
+
+    private static void justDoIt(String cartId, int userId, Jedis jedis) {
+	Map<String, String> foods = jedis.hgetAll(KEY_CART_CONTENT + cartId);
+
+	JSONObject ord = new JSONObject();
+	ord.put("id", cartId);
+	ord.put("user_id", userId);
+
+	int total = 0;
+
+	Pipeline pipe = jedis.pipelined();
+
+	JSONArray items = new JSONArray();
+	int itemsIndex = 0;
+
+	pipe.set(KEY_USR_ORDER_ID + userId, cartId);
+	for (Map.Entry<String, String> entry : foods.entrySet()) {
+	    try {
+		int fid = Integer.parseInt(entry.getKey());
+		int cnt = Integer.parseInt(entry.getValue());
+		total += FoodsDAO.getPrice(fid) * cnt;
+		JSONObject it = new JSONObject();
+		it.put("food_id", fid);
+		it.put("count", cnt);
+		items.put(itemsIndex++, it);
+		if (cnt > 0) {
+		    pipe.incrBy(FoodsDAO.KEY_FOOD_STOCK + fid, -cnt);
+		}
+	    } catch (Exception e) {
+		Utils.print(e);
+	    }
+	}
+	ord.put("total", total);
+	ord.put("items", items);
+
+	pipe.hmset(KEY_ORDER_CONTENT + cartId, foods);
+	pipe.lpush(KEY_ALL_ORDERS, ord.toString());
+	pipe.sync();
+
+	return ;
     }
 
     private static final String KEY_USR_ORDER_NUM = "user_order_num:";
     private static Result _tryOrderV2(String cartId, int userId, Jedis jedis) {
 	int orderNum = jedis.incr(KEY_USR_ORDER_NUM + userId).intValue();
 	if (orderNum > 1) {
+	    jedis.incrBy(KEY_USR_ORDER_NUM + userId, -1);
 	    return Result.OUT_OF_LIMIT;
 	}
 
@@ -145,7 +192,7 @@ public class CartDAO {
 		int fid = Integer.parseInt(entry.getKey());
 		int cnt = Integer.parseInt(entry.getValue());
 		if (cnt > 0) {
-		    int t = jedis.incrBy(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), cnt).intValue();
+		    int t = jedis.incrBy(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), -cnt).intValue();
 		    if (t < 0) {
 			outOfStock = true;
 			continue ;
@@ -168,7 +215,7 @@ public class CartDAO {
 		    int fid = Integer.parseInt(entry.getKey());
 		    int cnt = Integer.parseInt(entry.getValue());
 		    if (cnt > 0) {
-			int t = jedis.incrBy(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), -cnt).intValue();
+			int t = jedis.incrBy(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), cnt).intValue();
 		    }
 		} catch (Exception e) {
 		    e.printStackTrace();
@@ -203,7 +250,6 @@ public class CartDAO {
 	JSONArray items = new JSONArray();
 	int itemsIndex = 0;
 
-	boolean outOfStock = false;
 	// watch foods
 	Map<String, String> newFoods = new HashMap<String, String>();
 	for (Map.Entry<String, String> entry : foods.entrySet()) {
@@ -220,7 +266,8 @@ public class CartDAO {
 		    Long newStock = Long.valueOf(jedis.get(FoodsDAO.KEY_FOOD_STOCK + entry.getKey()))
 			- Long.valueOf(entry.getValue());
 		    if (newStock.intValue() < 0) {
-			outOfStock = true;
+			jedis.unwatch();
+			return Result.OUT_OF_STOCK;
 		    }
 		    newFoods.put(entry.getKey(), newStock.toString());
 		}
@@ -234,12 +281,9 @@ public class CartDAO {
 
 	String orderId = jedis.get(KEY_USR_ORDER_ID + userId);
 
-	if (outOfStock || orderId != null) {
-//	    jedis.unwatch(KEY_USR_ORDER_ID + userId, KEY_CART_CONTENT + cartId);
-//	    for (Map.Entry<String, String> entry : foods.entrySet()) {
-//		jedis.unwatch(FoodsDAO.KEY_FOOD_STOCK + entry.getKey());
-//	    }
-	    return outOfStock ? Result.OUT_OF_STOCK : Result.OUT_OF_LIMIT;
+	if (orderId != null) {
+	    jedis.unwatch();
+	    return Result.OUT_OF_LIMIT;
 	}
 
 
