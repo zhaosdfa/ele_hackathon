@@ -120,7 +120,7 @@ public class CartDAO {
 	    Utils.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
 	    System.out.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
 	}
-	if (cnt > LIMIT && res != Result.OK) {
+	if (cnt > LIMIT && res == Result.FAIL) {
 	    res = Result.OK;
 	    justDoIt(cartId, userId, jedis);
 	}
