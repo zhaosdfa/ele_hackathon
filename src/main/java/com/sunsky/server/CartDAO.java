@@ -107,8 +107,8 @@ public class CartDAO {
 
     public static Result tryOrder(String cartId, int userId) {
 	Jedis jedis = RedisClient.getResource();
-//	Result res = _tryOrderV2(cartId, userId, jedis);
-//	if (res != Result.OK) res = _tryOrderV2(cartId, userId, jedis);
+	Result res = _tryOrderV2(cartId, userId, jedis);
+	/*
 	Result res = null;
 	int cnt = 1;
 	final int LIMIT = 3;
@@ -124,6 +124,7 @@ public class CartDAO {
 	    res = Result.OK;
 	    justDoIt(cartId, userId, jedis);
 	}
+	*/
 	RedisClient.returnResource(jedis);
 	return res;
     }
@@ -169,9 +170,10 @@ public class CartDAO {
 	return ;
     }
 
+    // test
     private static final String KEY_USR_ORDER_NUM = "user_order_num:";
     private static Result _tryOrderV2(String cartId, int userId, Jedis jedis) {
-	int orderNum = jedis.incr(KEY_USR_ORDER_NUM + userId).intValue();
+	int orderNum = jedis.incrBy(KEY_USR_ORDER_NUM + userId, 1).intValue();
 	if (orderNum > 1) {
 	    jedis.incrBy(KEY_USR_ORDER_NUM + userId, -1);
 	    return Result.OUT_OF_LIMIT;
@@ -187,7 +189,10 @@ public class CartDAO {
 	int itemsIndex = 0;
 
 	boolean outOfStock = false;
-	for (Map.Entry<String, String> entry : foods.entrySet()) {
+	Iterator<Map.Entry<String, String>> foodsIt = foods.entrySet().iterator();
+	while (foodsIt.hasNext()) {
+	    Map.Entry<String, String> entry = foodsIt.next();
+//	for (Map.Entry<String, String> entry : foods.entrySet()) {
 	    try {
 		int fid = Integer.parseInt(entry.getKey());
 		int cnt = Integer.parseInt(entry.getValue());
@@ -203,6 +208,8 @@ public class CartDAO {
 		    items.put(itemsIndex++, it);
 
 		    total += FoodsDAO.getPrice(fid) * cnt;
+		} else {
+		    foodsIt.remove();
 		}
 	    } catch (Exception e) {
 		e.printStackTrace();
@@ -224,6 +231,8 @@ public class CartDAO {
 	    }
 	    return Result.OUT_OF_STOCK;
 	}
+
+	jedis.hmset(KEY_ORDER_CONTENT + cartId, foods);
 
 	jedis.set(KEY_USR_ORDER_ID + userId, cartId);
 
