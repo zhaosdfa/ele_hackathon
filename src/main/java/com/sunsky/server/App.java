@@ -19,7 +19,7 @@ public class App {
 	    System.out.println("loading...");
 	    UserDAO dao = new UserDAO();
 	    FoodsDAO fd = new FoodsDAO();
-	LuaScript ls = new LuaScript();
+		LuaScript ls = new LuaScript();
 	    System.out.println("loaded");
 
 
