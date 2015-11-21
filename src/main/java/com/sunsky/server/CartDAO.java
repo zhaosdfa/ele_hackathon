@@ -245,192 +245,192 @@ public class CartDAO {
 		}
 
 		//test v3
-		private static Result _tryOrderV3(String cartId, int userId, Jedis jedis) {
-			String orderId = jedis.get(KEY_USR_ORDER_ID + userId);
-			if (orderId != null) {
-				return Result.OUT_OF_LIMIT;
-			}
-
-			Map<String, String> foods = jedis.hgetAll(KEY_CART_CONTENT + cartId);
-			JSONObject ord = new JSONObject();
-			ord.put("id", cartId);
-			ord.put("user_id", userId);
-
-			int total = 0;
-			JSONArray items = new JSONArray();
-			int itemsIndex = 0;
-			List<String> KEYS = new ArrayList<String>();
-			List<String> ARGV = new ArrayList<String>();
-			/*
-			String Script1 = "local ok = 1; local key_food_stock = 'food_stock:'; " +
-				"if tonumber(redis.call('GET',key_food_stock..KEYS[1])) < tonumber(ARGV[1]) then ok = 0; end;" +
-				"if ok == 1 then redis.call('INCRBY',key_food_stock..KEYS[1],-tonumber(ARGV[1])); return 3; else return 1; end;";
-			String Script2 = "local ok = 1; local key_food_stock = 'food_stock:'; " +
-				"if tonumber(redis.call('GET',key_food_stock..KEYS[1])) < tonumber(ARGV[1]) then ok = 0; end;" +
-				"if tonumber(redis.call('GET',key_food_stock..KEYS[2])) < tonumber(ARGV[2]) then ok = 0; end;" +
-				"if ok == 1 then redis.call('INCRBY',key_food_stock..KEYS[1],-tonumber(ARGV[1])); " +
-				"redis.call('INCRBY',key_food_stock..KEYS[2],-tonumber(ARGV[2])); " +
-				"return 3; else return 1; end;";
-			String Script3 = "local ok = 1; local key_food_stock = 'food_stock:'; " +
-				"if tonumber(redis.call('GET',key_food_stock..KEYS[1])) < tonumber(ARGV[1]) then ok = 0; end;" +
-				"if tonumber(redis.call('GET',key_food_stock..KEYS[2])) < tonumber(ARGV[2]) then ok = 0; end;" +
-				"if tonumber(redis.call('GET',key_food_stock..KEYS[3])) < tonumber(ARGV[3]) then ok = 0; end;" +
-				"if ok == 1 then redis.call('INCRBY',key_food_stock..KEYS[1],-tonumber(ARGV[1])); " +
-				"redis.call('INCRBY',key_food_stock..KEYS[2],-tonumber(ARGV[2])); " +
-				"redis.call('INCRBY',key_food_stock..KEYS[3],-tonumber(ARGV[3])); " +
-				"return 3; else return 1; end;";
-			*/
-			Iterator<Map.Entry<String, String>> foodsIt = foods.entrySet().iterator();
-			while (foodsIt.hasNext()) {
-				Map.Entry<String, String> entry = foodsIt.next();
-				try {
-					int fid = Integer.parseInt(entry.getKey());
-					int cnt = Integer.parseInt(entry.getValue());
-					if (cnt > 0) {
-						KEYS.add(entry.getKey());
-						ARGV.add(entry.getValue());
-						JSONObject it = new JSONObject();
-						it.put("food_id", fid);
-						it.put("count", cnt);
-						items.put(itemsIndex++, it);
-						total += FoodsDAO.getPrice(fid) * cnt;
-					}else foodsIt.remove(); 
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			ord.put("total", total);
-			ord.put("items", items);
-
-			if(KEYS.size() == 1){
-				Long re = (Long)jedis.evalsha(LuaScript.sha1,KEYS,ARGV);
-				if(re == 1)return Result.OUT_OF_STOCK;
-				else if(re == 2)return Result.FAIL;		
-				else if(re == 3){
-					jedis.hmset(KEY_ORDER_CONTENT + cartId, foods);
-					jedis.set(KEY_USR_ORDER_ID + userId, cartId);
-					jedis.lpush(KEY_ALL_ORDERS, ord.toString());
-					return Result.OK;
-				}else{
-					Utils.println("redis lua re err with " + re);
-				}
-			}else if(KEYS.size() == 2){
-				Long re = (Long)jedis.evalsha(LuaScript.sha2,KEYS,ARGV);
-				if(re == 1)return Result.OUT_OF_STOCK;
-				else if(re == 2)return Result.FAIL;		
-				else if(re == 3){
-					jedis.hmset(KEY_ORDER_CONTENT + cartId, foods);
-					jedis.set(KEY_USR_ORDER_ID + userId, cartId);
-					jedis.lpush(KEY_ALL_ORDERS, ord.toString());
-					return Result.OK;
-				}else{
-					Utils.println("redis lua re err with " + re);
-				}
-			}else if(KEYS.size() == 3){
-				Long re = (Long)jedis.evalsha(LuaScript.sha3,KEYS,ARGV);
-				if(re == 1)return Result.OUT_OF_STOCK;
-				else if(re == 2)return Result.FAIL;		
-				else if(re == 3){
-					jedis.hmset(KEY_ORDER_CONTENT + cartId, foods);
-					jedis.set(KEY_USR_ORDER_ID + userId, cartId);
-					jedis.lpush(KEY_ALL_ORDERS, ord.toString());
-					return Result.OK;
-				}else{
-					Utils.println("redis lua re err with " + re);
-				}
-
-			}else{
-				Utils.println("error : KEYS.size() > 3!");
-			}
-			return Result.OK;
+	private static Result _tryOrderV3(String cartId, int userId, Jedis jedis) {
+		String orderId = jedis.get(KEY_USR_ORDER_ID + userId);
+		if (orderId != null) {
+			return Result.OUT_OF_LIMIT;
 		}
+
+		Map<String, String> foods = jedis.hgetAll(KEY_CART_CONTENT + cartId);
+		JSONObject ord = new JSONObject();
+		ord.put("id", cartId);
+		ord.put("user_id", userId);
+
+		int total = 0;
+		JSONArray items = new JSONArray();
+		int itemsIndex = 0;
+		List<String> KEYS = new ArrayList<String>();
+		List<String> ARGV = new ArrayList<String>();
+		/*
+		   String Script1 = "local ok = 1; local key_food_stock = 'food_stock:'; " +
+		   "if tonumber(redis.call('GET',key_food_stock..KEYS[1])) < tonumber(ARGV[1]) then ok = 0; end;" +
+		   "if ok == 1 then redis.call('INCRBY',key_food_stock..KEYS[1],-tonumber(ARGV[1])); return 3; else return 1; end;";
+		   String Script2 = "local ok = 1; local key_food_stock = 'food_stock:'; " +
+		   "if tonumber(redis.call('GET',key_food_stock..KEYS[1])) < tonumber(ARGV[1]) then ok = 0; end;" +
+		   "if tonumber(redis.call('GET',key_food_stock..KEYS[2])) < tonumber(ARGV[2]) then ok = 0; end;" +
+		   "if ok == 1 then redis.call('INCRBY',key_food_stock..KEYS[1],-tonumber(ARGV[1])); " +
+		   "redis.call('INCRBY',key_food_stock..KEYS[2],-tonumber(ARGV[2])); " +
+		   "return 3; else return 1; end;";
+		   String Script3 = "local ok = 1; local key_food_stock = 'food_stock:'; " +
+		   "if tonumber(redis.call('GET',key_food_stock..KEYS[1])) < tonumber(ARGV[1]) then ok = 0; end;" +
+		   "if tonumber(redis.call('GET',key_food_stock..KEYS[2])) < tonumber(ARGV[2]) then ok = 0; end;" +
+		   "if tonumber(redis.call('GET',key_food_stock..KEYS[3])) < tonumber(ARGV[3]) then ok = 0; end;" +
+		   "if ok == 1 then redis.call('INCRBY',key_food_stock..KEYS[1],-tonumber(ARGV[1])); " +
+		   "redis.call('INCRBY',key_food_stock..KEYS[2],-tonumber(ARGV[2])); " +
+		   "redis.call('INCRBY',key_food_stock..KEYS[3],-tonumber(ARGV[3])); " +
+		   "return 3; else return 1; end;";
+		   */
+		Iterator<Map.Entry<String, String>> foodsIt = foods.entrySet().iterator();
+		while (foodsIt.hasNext()) {
+			Map.Entry<String, String> entry = foodsIt.next();
+			try {
+				int fid = Integer.parseInt(entry.getKey());
+				int cnt = Integer.parseInt(entry.getValue());
+				if (cnt > 0) {
+					KEYS.add(entry.getKey());
+					ARGV.add(entry.getValue());
+					JSONObject it = new JSONObject();
+					it.put("food_id", fid);
+					it.put("count", cnt);
+					items.put(itemsIndex++, it);
+					total += FoodsDAO.getPrice(fid) * cnt;
+				}else foodsIt.remove(); 
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		ord.put("total", total);
+		ord.put("items", items);
+
+		if(KEYS.size() == 1){
+			Long re = (Long)jedis.evalsha(LuaScript.sha1,KEYS,ARGV);
+			if(re == 1)return Result.OUT_OF_STOCK;
+			else if(re == 2)return Result.FAIL;		
+			else if(re == 3){
+				jedis.hmset(KEY_ORDER_CONTENT + cartId, foods);
+				jedis.set(KEY_USR_ORDER_ID + userId, cartId);
+				jedis.lpush(KEY_ALL_ORDERS, ord.toString());
+				return Result.OK;
+			}else{
+				Utils.println("redis lua re err with " + re);
+			}
+		}else if(KEYS.size() == 2){
+			Long re = (Long)jedis.evalsha(LuaScript.sha2,KEYS,ARGV);
+			if(re == 1)return Result.OUT_OF_STOCK;
+			else if(re == 2)return Result.FAIL;		
+			else if(re == 3){
+				jedis.hmset(KEY_ORDER_CONTENT + cartId, foods);
+				jedis.set(KEY_USR_ORDER_ID + userId, cartId);
+				jedis.lpush(KEY_ALL_ORDERS, ord.toString());
+				return Result.OK;
+			}else{
+				Utils.println("redis lua re err with " + re);
+			}
+		}else if(KEYS.size() == 3){
+			Long re = (Long)jedis.evalsha(LuaScript.sha3,KEYS,ARGV);
+			if(re == 1)return Result.OUT_OF_STOCK;
+			else if(re == 2)return Result.FAIL;		
+			else if(re == 3){
+				jedis.hmset(KEY_ORDER_CONTENT + cartId, foods);
+				jedis.set(KEY_USR_ORDER_ID + userId, cartId);
+				jedis.lpush(KEY_ALL_ORDERS, ord.toString());
+				return Result.OK;
+			}else{
+				Utils.println("redis lua re err with " + re);
+			}
+
+		}else{
+			Utils.println("error : KEYS.size() > 3!");
+		}
+		return Result.OK;
+	}
 
 		// TODO 
-		private static Result _tryOrder(String cartId, int userId, Jedis jedis) {
-			jedis.watch(KEY_USR_ORDER_ID + userId, KEY_CART_CONTENT + cartId);
+	private static Result _tryOrder(String cartId, int userId, Jedis jedis) {
+		jedis.watch(KEY_USR_ORDER_ID + userId, KEY_CART_CONTENT + cartId);
 
-			Map<String, String> foods = jedis.hgetAll(KEY_CART_CONTENT + cartId);
+		Map<String, String> foods = jedis.hgetAll(KEY_CART_CONTENT + cartId);
 
-			JSONObject ord = new JSONObject();
-			ord.put("id", cartId);
-			ord.put("user_id", userId);
+		JSONObject ord = new JSONObject();
+		ord.put("id", cartId);
+		ord.put("user_id", userId);
 
-			int total = 0;
+		int total = 0;
 
-			JSONArray items = new JSONArray();
-			int itemsIndex = 0;
+		JSONArray items = new JSONArray();
+		int itemsIndex = 0;
 
-			// watch foods
-			Map<String, String> newFoods = new HashMap<String, String>();
-			for (Map.Entry<String, String> entry : foods.entrySet()) {
-				jedis.watch(FoodsDAO.KEY_FOOD_STOCK + entry.getKey());
-				try {
-					int fid = Integer.parseInt(entry.getKey());
-					int cnt = Integer.parseInt(entry.getValue());
-					if (cnt > 0) {
-						JSONObject it = new JSONObject();
-						it.put("food_id", fid);
-						it.put("count", cnt);
-						items.put(itemsIndex++, it);
-						total += FoodsDAO.getPrice(fid) * cnt;
-						Long newStock = Long.valueOf(jedis.get(FoodsDAO.KEY_FOOD_STOCK + entry.getKey()))
-							- Long.valueOf(entry.getValue());
-						if (newStock.intValue() < 0) {
-							jedis.unwatch();
-							return Result.OUT_OF_STOCK;
-						}
-						newFoods.put(entry.getKey(), newStock.toString());
+		// watch foods
+		Map<String, String> newFoods = new HashMap<String, String>();
+		for (Map.Entry<String, String> entry : foods.entrySet()) {
+			jedis.watch(FoodsDAO.KEY_FOOD_STOCK + entry.getKey());
+			try {
+				int fid = Integer.parseInt(entry.getKey());
+				int cnt = Integer.parseInt(entry.getValue());
+				if (cnt > 0) {
+					JSONObject it = new JSONObject();
+					it.put("food_id", fid);
+					it.put("count", cnt);
+					items.put(itemsIndex++, it);
+					total += FoodsDAO.getPrice(fid) * cnt;
+					Long newStock = Long.valueOf(jedis.get(FoodsDAO.KEY_FOOD_STOCK + entry.getKey()))
+						- Long.valueOf(entry.getValue());
+					if (newStock.intValue() < 0) {
+						jedis.unwatch();
+						return Result.OUT_OF_STOCK;
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
+					newFoods.put(entry.getKey(), newStock.toString());
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-
-			ord.put("total", total);
-			ord.put("items", items);
-
-			String orderId = jedis.get(KEY_USR_ORDER_ID + userId);
-
-			if (orderId != null) {
-				jedis.unwatch();
-				return Result.OUT_OF_LIMIT;
-			}
-
-
-			Transaction tx = jedis.multi();
-
-			tx.set(KEY_USR_ORDER_ID + userId, cartId);
-			for (Map.Entry<String, String> entry : newFoods.entrySet()) {
-				tx.set(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), entry.getValue());
-			}
-			tx.hmset(KEY_ORDER_CONTENT + cartId, foods);
-			tx.lpush(KEY_ALL_ORDERS, ord.toString());
-			List<Object> list = tx.exec();
-			if (list == null || list.size() == 0) {
-				System.out.println("transaction: -> FAILED");
-				Utils.println("transaction: -> FAILED");
-				return Result.FAIL;
-			}
-			for (Object str : list) {
-				Utils.println("transaction: -> " + str);
-			}
-			return Result.OK;
 		}
 
-		public static String getOrders() {
-			Jedis jedis = RedisClient.getResource();
-			List<String> list = jedis.lrange(KEY_ALL_ORDERS, 0, -1);
-			StringBuilder builder = new StringBuilder();
-			builder.append("[");
-			boolean first = true;
-			for (String s : list) {
-				if (!first) builder.append(",");
-				first = false;
-				builder.append(s);
-			}
-			builder.append("]");
-			RedisClient.returnResource(jedis);
-			return builder.toString();
+		ord.put("total", total);
+		ord.put("items", items);
+
+		String orderId = jedis.get(KEY_USR_ORDER_ID + userId);
+
+		if (orderId != null) {
+			jedis.unwatch();
+			return Result.OUT_OF_LIMIT;
 		}
 
+
+		Transaction tx = jedis.multi();
+
+		tx.set(KEY_USR_ORDER_ID + userId, cartId);
+		for (Map.Entry<String, String> entry : newFoods.entrySet()) {
+			tx.set(FoodsDAO.KEY_FOOD_STOCK + entry.getKey(), entry.getValue());
+		}
+		tx.hmset(KEY_ORDER_CONTENT + cartId, foods);
+		tx.lpush(KEY_ALL_ORDERS, ord.toString());
+		List<Object> list = tx.exec();
+		if (list == null || list.size() == 0) {
+			System.out.println("transaction: -> FAILED");
+			Utils.println("transaction: -> FAILED");
+			return Result.FAIL;
+		}
+		for (Object str : list) {
+			Utils.println("transaction: -> " + str);
+		}
+		return Result.OK;
 	}
+
+	public static String getOrders() {
+		Jedis jedis = RedisClient.getResource();
+		List<String> list = jedis.lrange(KEY_ALL_ORDERS, 0, -1);
+		StringBuilder builder = new StringBuilder();
+		builder.append("[");
+		boolean first = true;
+		for (String s : list) {
+			if (!first) builder.append(",");
+			first = false;
+			builder.append(s);
+		}
+		builder.append("]");
+		RedisClient.returnResource(jedis);
+		return builder.toString();
+	}
+
+}
