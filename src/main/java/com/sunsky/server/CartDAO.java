@@ -107,22 +107,22 @@ public class CartDAO {
 
     public static Result tryOrder(String cartId, int userId) {
 	Jedis jedis = RedisClient.getResource();
-	Result res = _tryOrderV3(cartId, userId, jedis);
-//	Result res = null;
-//	int cnt = 1;
-//	final int LIMIT = 3;
-//	do {
-//	    res = _tryOrder(cartId, userId, jedis);
-//	} while (res == Result.FAIL && ++cnt <= LIMIT);
-//	if (cnt > 1) {
-//	    failCount++;
-//	    Utils.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
-//	    System.out.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
-//	}
-//	if (cnt > LIMIT && res == Result.FAIL) {
-//	    res = Result.OK;
-//	    justDoIt(cartId, userId, jedis);
-//	}
+//	Result res = _tryOrderV3(cartId, userId, jedis);
+	Result res = null;
+	int cnt = 1;
+	final int LIMIT = 3;
+	do {
+	    res = _tryOrder(cartId, userId, jedis);
+	} while (res == Result.FAIL && ++cnt <= LIMIT);
+	if (cnt > 1) {
+	    failCount++;
+	    Utils.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
+	    System.out.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
+	}
+	if (cnt > LIMIT && res == Result.FAIL) {
+	    res = Result.OK;
+	    justDoIt(cartId, userId, jedis);
+	}
 	RedisClient.returnResource(jedis);
 	return res;
     }
