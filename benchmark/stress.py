@@ -139,6 +139,8 @@ class Query(object):
                 p.incr(REQUEST_SUCCESS_KEY)
                 p.lpush(REQ_FINISH_TIME_KEY, now)
             else:
+                #zhaosdfa
+                p.lpush("KEY_FAILED", "failed: " + url + ", status: " + status)
                 p.incr(REQUEST_FAILURE_KEY)
             p.lpush(REQ_RESP_TIME_KEY, elapsed)
             p.execute()
@@ -371,6 +373,9 @@ def report(processes, threads, total_time, total_order):
         idx = 0 if idx == 0 else idx - 1
         p(" {:>4.0%}      ".format(e),
           int(math.ceil(order_resp_time[idx] * 1000)))
+
+    myfail = get_range("KEY_FAILED")
+    p("failed:", myfail)
 
 
 def main():

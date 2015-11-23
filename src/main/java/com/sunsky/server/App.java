@@ -1,10 +1,10 @@
 package com.sunsky.server;
 
 import java.io.IOException;
-//import com.sun.net.httpserver.HttpHandler;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.nio.*;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.servlet.*;
@@ -36,27 +36,31 @@ public class App {
 //	    threadPool.setMinThreads(100);
 
 	    // HTTP Configuration
-//	    HttpConfiguration http_config = new HttpConfiguration();
+	    HttpConfiguration http_config = new HttpConfiguration();
 	    //http_config.setSecureScheme("https");
 	    //http_config.setSecurePort(8443);
 	    //http_config.setOutputBufferSize(32768);
 	    //http_config.setRequestHeaderSize(8192);
 	    //http_config.setResponseHeaderSize(8192);
-//	    http_config.setSendServerVersion(false);
-//	    http_config.setSendDateHeader(false);
+	    http_config.setSendServerVersion(false);
+	    http_config.setSendDateHeader(false);
 	    // httpConfig.addCustomizer(new ForwardedRequestCustomizer());
 
 
-	    Server server = new Server(port);
+	    Server server = new Server();
 //	    Server server = new Server(threadPool);
 
 	    // === jetty-http.xml ===
-//	    ServerConnector http = new ServerConnector(server,
+	    //SelectChannelConnector connector = new SelectChannelConnector();
+	    NetworkTrafficSelectChannelConnector connector = new NetworkTrafficSelectChannelConnector(server);
+	    connector.setPort(port);
+	    connector.setHost(System.getenv("APP_HOST"));
+//	    ServerConnector http = new (server,
 //		    new HttpConnectionFactory(http_config));
 //	    http.setPort(port);
 //	    http.setIdleTimeout(10000);
 
-//	    server.addConnector(http);
+	    server.addConnector(connector);
 
 
 	    ServletHandler handler = new ServletHandler();
