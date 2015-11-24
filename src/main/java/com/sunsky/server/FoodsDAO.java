@@ -17,6 +17,11 @@ public class FoodsDAO {
 
     public static List<Food> foods = null;
 
+    private static long total_time = 0;
+    private static long total_num = 0;
+    private static long dao_time = 0;
+    private static long dao_num = 0;
+
     static {
 	Connection conn = null;
 	Jedis jedis = null;
@@ -73,7 +78,7 @@ public class FoodsDAO {
     }
 
     public static boolean exists(int id) {
-	return prices.get(id) != null;
+	return prices.containsKey(id);
     }
 
     private static void setStack(int id) {

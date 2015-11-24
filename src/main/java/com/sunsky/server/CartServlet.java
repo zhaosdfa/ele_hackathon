@@ -14,11 +14,18 @@ import org.json.JSONArray;
 import java.util.*;
 
 public class CartServlet extends HttpServlet {
+    
+    private static long total_time = 0;
+    private static long total_num = 0;
+    private static long dao_time = 0;
+    private static long dao_num = 0;
 
     public void service(HttpServletRequest req, HttpServletResponse res)
 	throws ServletException, IOException
     {
 	try {
+
+//	    long start = System.currentTimeMillis();
 
 	    res.setCharacterEncoding("utf-8");
 
@@ -29,6 +36,8 @@ public class CartServlet extends HttpServlet {
 
 	    res.setStatus(result.getCode());
 	    res.getWriter().println(responseMsg);
+//	    long end = System.currentTimeMillis();
+
 
 	} catch (Exception e) {
 	    Utils.print(e);
@@ -56,11 +65,22 @@ public class CartServlet extends HttpServlet {
 
 	String method = req.getMethod();
 
+	ResponseResult ret = null;
 	if (method.equals("PATCH")) {
-	    return addFood(req, user, body);
+//	    long start = System.currentTimeMillis();
+	    ret = addFood(req, user, body);
+//	    long end = System.currentTimeMillis();
+//	    total_time += end - start;
+//	    total_num ++;
+//	    if (total_num % 100 == 0) {
+//		double total_avg = total_time / total_num;
+//		double dao_avg = dao_time / dao_num;
+//		System.out.println("total: " + total_avg + ", dao: " + dao_avg);
+//	    }
 	} else {
-	    return createCart(user);
+	    ret = createCart(user);
 	}
+	return ret;
     }
 
     public ResponseResult createCart(User user) {
@@ -72,13 +92,11 @@ public class CartServlet extends HttpServlet {
 
     public ResponseResult addFood(HttpServletRequest req, User user, String requestBody) {
 	String uri = req.getRequestURI();
-	String[] parts = uri.split("\\?");
-	String[] tmp = parts[0].split("/");
-	int sz = tmp.length;
-	String cartId = null;
-	if (sz > 0) {
-	    cartId = tmp[sz-1];
+	int index = uri.indexOf("?");
+	if (index < 0) {
+	    index = uri.length();
 	}
+	String cartId = uri.substring(7, index);
 
 	String str = CartDAO.getUserId(cartId);
 	int userId = -1;
@@ -122,7 +140,21 @@ public class CartServlet extends HttpServlet {
 			return new ResponseResult(404, obj.toString());
 		}
 
-		if (foodCount > 3 || !CartDAO.addFood(cartId, foodId, foodCount)) {
+		if (foodCount > 3) {
+			JSONObject obj = new JSONObject();
+			obj.put("code", "FOOD_OUT_OF_LIMIT");
+			obj.put("message", "篮子中食物数量超过了三个");
+			return new ResponseResult(403, obj.toString());
+		}
+
+//		long start = System.currentTimeMillis();
+		boolean ret = CartDAO.addFood(cartId, foodId, foodCount);
+//		long end = System.currentTimeMillis();
+
+//		dao_time += end - start;
+//		dao_num++;
+
+		if (!ret) {
 			JSONObject obj = new JSONObject();
 			obj.put("code", "FOOD_OUT_OF_LIMIT");
 			obj.put("message", "篮子中食物数量超过了三个");

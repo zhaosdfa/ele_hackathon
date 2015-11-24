@@ -51,6 +51,8 @@ ORDER_FINISH_TIME_KEY = "{}:order_finish_time".format(KEY_PREFIX)
 redis_store = redis.Redis()
 users, foods = {}, []
 
+file = open('fail.log', 'w')
+
 
 @contextlib.contextmanager
 def db_query():
@@ -118,7 +120,7 @@ class Query(object):
         self.user_id = None
         self.cart_id = None
 
-    def request(self, method, url, headers=None, data=None):
+    def request(self, nkey, method, url, headers=None, data=None):
         data = data or {}
         headers = headers or {}
         headers["Content-Type"] = "application/json"
@@ -140,9 +142,11 @@ class Query(object):
                 p.lpush(REQ_FINISH_TIME_KEY, now)
             else:
                 #zhaosdfa
-                p.lpush("KEY_FAILED", "failed: " + url + ", status: " + status)
+                tmpstr = "KEY_REQ_FAILED" + "failed: " + url + ", status: " + status + "\n"
+                file.write(tmpstr)
                 p.incr(REQUEST_FAILURE_KEY)
             p.lpush(REQ_RESP_TIME_KEY, elapsed)
+            p.lpush(REQ_RESP_TIME_KEY + nkey, elapsed)
             p.execute()
         return {"status": status, "data": safe_loads(data)}
 
@@ -157,7 +161,7 @@ class Query(object):
             "username": username,
             "password": password
         }
-        response = self.request("POST", "/login", data=data)
+        response = self.request("login", "POST", "/login", data=data)
         if response["status"] == 200:
             self.access_token = response["data"]["access_token"]
             return True
@@ -173,15 +177,15 @@ class Query(object):
         return self._do_login(user["username"], user["password"])
 
     def get_foods(self):
-        res = self.request("GET", self.url("/foods"))
+        res = self.request("foods", "GET", self.url("/foods"))
         return res["status"] == 200
 
     def get_orders(self):
-        res = self.request("GET", self.url("/orders"))
+        res = self.request("get_orders", "GET", self.url("/orders"))
         return res["status"] == 200
 
     def create_cart(self):
-        response = self.request("POST", self.url("/carts"))
+        response = self.request("create_carts", "POST", self.url("/carts"))
         try:
             self.cart_id = response["data"].get("cart_id")
         except:
@@ -192,7 +196,7 @@ class Query(object):
         food = random.choice(foods)
         data = {"food_id": food["id"], "count": 1}
         path = "/carts/{}".format(self.cart_id)
-        res = self.request("PATCH", self.url(path), data=data)
+        res = self.request("add_foods", "PATCH", self.url(path), data=data)
         return res["status"] == 204
 
     def make_order(self):
@@ -200,10 +204,17 @@ class Query(object):
                  self.cart_add_food, self.cart_add_food]
         for action in chain:
             if not action():
+                #zhaosdfa
+                tmpstr = "KEY_ORDER_FAILED: " + action.__name__ + ", status: " + "\n"
+                file.write(tmpstr)
                 return False
 
         data = {"cart_id": self.cart_id}
-        res = self.request("POST", self.url("/orders"), data=data)
+        res = self.request("make_order", "POST", self.url("/orders"), data=data)
+        if res["status"] != 200:
+                #zhaosdfa
+                tmpstr = "KEY_ORDER_FAILED: make_order" + "\n"
+                file.write(tmpstr)
         return res["status"] == 200
 
 
@@ -224,6 +235,8 @@ def job(host, port):
             p.incr(SUCCESS_KEY)
             p.lpush(ORDER_FINISH_TIME_KEY, end)
         else:
+            #zhaosdfa
+            file.write("fail: " + q + "\n")
             p.incr(FAILURE_KEY)
         p.lpush(ORDER_RESP_TIME_KEY, elapsed)
         p.execute()
@@ -333,6 +346,13 @@ def report(processes, threads, total_time, total_order):
     req_avg = safe_div(sum(req_resp_time), float(req_success))
     order_avg = safe_div(sum(order_resp_time), success)
 
+    login_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "login")), float(success))
+    foods_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "foods")), float(success))
+    create_carts_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "create_carts")), float(success))
+    add_foods_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "add_foods")), float(success))
+    make_order_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "make_order")), float(success))
+    get_order_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "get_orders")), float(success))
+
     req_sec = collections.Counter(int(t) for t in req_finish_time)
     order_sec = collections.Counter(int(t) for t in order_finish_time)
 
@@ -365,6 +385,13 @@ def report(processes, threads, total_time, total_order):
     p("Request per second:   ", max_req_sec, " (max) ", min_req_sec, " (min) ", mean_req_sec, " (mean)")  # noqa
     p("Order per second:     ", max_order_sec, " (max) ", min_order_sec, " (min) ", mean_order_sec, " (mean)")  # noqa
 
+    p("login Time per request:          ", round(login_avg * 1000, 2), "ms", " (mean)")
+    p("foods Time per request:          ", round(foods_avg * 1000, 2), "ms", " (mean)")
+    p("create carts Time per request:   ", round(create_carts_avg * 1000, 2), "ms", " (mean)")
+    p("add foods Time per request:      ", round(add_foods_avg * 1000, 2), "ms", " (mean)")
+    p("make order Time per request:     ", round(make_order_avg * 1000, 2), "ms", " (mean)")
+    p("get order Time per request:      ", round(get_order_avg * 1000, 2), "ms", " (mean)")
+
     p("\nPercentage of orders made within a certain time (ms)")
     order_resp_time = sorted(set(order_resp_time)) if order_resp_time else [0]
     l = len(order_resp_time)
@@ -374,8 +401,10 @@ def report(processes, threads, total_time, total_order):
         p(" {:>4.0%}      ".format(e),
           int(math.ceil(order_resp_time[idx] * 1000)))
 
-    myfail = get_range("KEY_FAILED")
-    p("failed:", myfail)
+    #p("failed:")
+    #myfail = get_range("KEY_FAILED")
+    #for str in myfail:
+    #    p(str)
 
 
 def main():

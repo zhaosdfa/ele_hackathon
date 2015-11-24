@@ -3,6 +3,8 @@ package com.sunsky.server;
 import java.io.*;
 import javax.servlet.http.HttpServletRequest;
 import java.security.MessageDigest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Utils {
 
@@ -21,6 +23,7 @@ public class Utils {
 	    e.printStackTrace(out);
 	}
     }
+
 
     public static final int BUFFER_SIZE = 64;
     public static final String ENCODE = "utf-8";

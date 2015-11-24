@@ -31,7 +31,7 @@ public class App {
 	    }
 
 	    // Setup Threadpool
-//	    QueuedThreadPool threadPool = new QueuedThreadPool();
+	    QueuedThreadPool threadPool = new QueuedThreadPool(12);
 //	    threadPool.setMaxThreads(500);
 //	    threadPool.setMinThreads(100);
 
@@ -39,28 +39,33 @@ public class App {
 	    HttpConfiguration http_config = new HttpConfiguration();
 	    //http_config.setSecureScheme("https");
 	    //http_config.setSecurePort(8443);
-	    //http_config.setOutputBufferSize(32768);
-	    //http_config.setRequestHeaderSize(8192);
-	    //http_config.setResponseHeaderSize(8192);
+	    http_config.setOutputBufferSize(32768);
+	    http_config.setRequestHeaderSize(1024);
+	    http_config.setResponseHeaderSize(1024);
 	    http_config.setSendServerVersion(false);
 	    http_config.setSendDateHeader(false);
 	    // httpConfig.addCustomizer(new ForwardedRequestCustomizer());
 
 
-	    Server server = new Server();
-//	    Server server = new Server(threadPool);
+//	    Server server = new Server(port);
+	    Server server = new Server(threadPool);
+
+	    // Extra options
+	    server.setDumpAfterStart(false);
+	    server.setDumpBeforeStop(false);
+
+	    //SelectChannelConnector connector = new SelectChannelConnector();
+//	    NetworkTrafficSelectChannelConnector connector = new NetworkTrafficSelectChannelConnector(server);
+//	    connector.setPort(port);
+//	    connector.setHost(System.getenv("APP_HOST"));
 
 	    // === jetty-http.xml ===
-	    //SelectChannelConnector connector = new SelectChannelConnector();
-	    NetworkTrafficSelectChannelConnector connector = new NetworkTrafficSelectChannelConnector(server);
-	    connector.setPort(port);
-	    connector.setHost(System.getenv("APP_HOST"));
-//	    ServerConnector http = new (server,
-//		    new HttpConnectionFactory(http_config));
-//	    http.setPort(port);
-//	    http.setIdleTimeout(10000);
+	    ServerConnector http = new ServerConnector(server,
+		    new HttpConnectionFactory(http_config));
+	    http.setPort(port);
+	    http.setIdleTimeout(10000);
 
-	    server.addConnector(connector);
+	    server.addConnector(http);
 
 
 	    ServletHandler handler = new ServletHandler();

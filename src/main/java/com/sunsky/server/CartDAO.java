@@ -3,6 +3,7 @@ package com.sunsky.server;
 import redis.clients.jedis.*;
 import java.util.*;
 import org.json.*;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class CartDAO {
 
@@ -58,18 +59,24 @@ public class CartDAO {
     // this function may have race condition , may be need use transaction
     public static boolean addFood(String cartId, int foodId, int foodCount) {
 	Jedis jedis = RedisClient.getResource();
-	int cur = jedis.incrBy(KEY_CART_TOTAL + cartId, foodCount).intValue();
 	boolean flag = true;
-	// should judge cnt < 0 ?
-	if (cur > 3) {
-	    // roll back
-	    jedis.incrBy(KEY_CART_TOTAL + cartId, -foodCount);
-	    flag = false;
+	try {
+
+	    int cur = jedis.incrBy(KEY_CART_TOTAL + cartId, foodCount).intValue();
+	    // should judge cnt < 0 ?
+	    if (cur > 3) {
+		// roll back
+		jedis.incrBy(KEY_CART_TOTAL + cartId, -foodCount);
+		flag = false;
+	    }
+	    if (flag) {
+		jedis.hincrBy(KEY_CART_CONTENT + cartId, ""+foodId, foodCount);
+	    }
+	} catch (Exception e) {
+	    Utils.print(e);
+	} finally {
+	    RedisClient.returnResource(jedis);
 	}
-	if (flag) {
-	    jedis.hincrBy(KEY_CART_CONTENT + cartId, ""+foodId, foodCount);
-	}
-	RedisClient.returnResource(jedis);
 	return flag;
     }
 
@@ -107,23 +114,28 @@ public class CartDAO {
 
     public static Result tryOrder(String cartId, int userId) {
 	Jedis jedis = RedisClient.getResource();
-	Result res = _tryOrderV2(cartId, userId, jedis);
-//	Result res = null;
-//	int cnt = 1;
-//	final int LIMIT = 3;
-//	do {
-//	    res = _tryOrder(cartId, userId, jedis);
-//	} while (res == Result.FAIL && ++cnt <= LIMIT);
-//	if (cnt > 1) {
-//	    failCount++;
-//	    Utils.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
-//	    System.out.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
-//	}
-//	if (cnt > LIMIT && res == Result.FAIL) {
-//	    res = Result.OK;
-//	    justDoIt(cartId, userId, jedis);
-//	}
-	RedisClient.returnResource(jedis);
+//	Result res = _tryOrder(cartId, userId, jedis);
+	Result res = null;
+	int cnt = 1;
+	final int LIMIT = 3;
+	try {
+	    do {
+		res = _tryOrder(cartId, userId, jedis);
+	    } while (res == Result.FAIL && ++cnt <= LIMIT);
+	    if (cnt > 1) {
+		failCount++;
+		Utils.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
+		//System.out.println("[ " + failCount + " ]try order times: " + cnt + ", result: " + res);
+	    }
+	    if (cnt > LIMIT && res == Result.FAIL) {
+		res = Result.OK;
+		justDoIt(cartId, userId, jedis);
+	    }
+	} catch (Exception e) {
+	    Utils.print(e);
+	} finally {
+	    RedisClient.returnResource(jedis);
+	}
 	return res;
     }
 
@@ -345,7 +357,7 @@ public class CartDAO {
 
 	// TODO 
 	private static Result _tryOrder(String cartId, int userId, Jedis jedis) {
-	    jedis.watch(KEY_USR_ORDER_ID + userId, KEY_CART_CONTENT + cartId);
+//	    jedis.watch(KEY_USR_ORDER_ID + userId, KEY_CART_CONTENT + cartId);
 
 	    Map<String, String> foods = jedis.hgetAll(KEY_CART_CONTENT + cartId);
 
@@ -379,6 +391,10 @@ public class CartDAO {
 			}
 			newFoods.put(entry.getKey(), newStock.toString());
 		    }
+		} catch (JedisConnectionException e1) {
+		    e1.printStackTrace();
+		    jedis.unwatch();
+		    return Result.FAIL;
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}
@@ -405,7 +421,7 @@ public class CartDAO {
 	    tx.lpush(KEY_ALL_ORDERS, ord.toString());
 	    List<Object> list = tx.exec();
 	    if (list == null || list.size() == 0) {
-		System.out.println("transaction: -> FAILED");
+		//System.out.println("transaction: -> FAILED");
 		Utils.println("transaction: -> FAILED");
 		return Result.FAIL;
 	    }
