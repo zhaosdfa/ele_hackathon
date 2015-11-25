@@ -146,6 +146,7 @@ class Query(object):
                 else:
                     p.incr(REQUEST_FAILURE_KEY)
                 p.lpush(REQ_RESP_TIME_KEY, elapsed)
+		p.lpush(REQ_RESP_TIME_KEY + nkey, elapsed)
                 p.execute()
 
     def url(self, path):
@@ -348,7 +349,7 @@ def report(processes, threads, total_time, total_order):
     login_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "login")), float(success))
     foods_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "foods")), float(success))
     create_carts_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "create_carts")), float(success))
-    add_foods_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "add_foods")), float(success))
+    add_foods_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "add_foods")), float(success)*2)
     make_order_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "make_order")), float(success))
     get_order_avg = safe_div(sum(get_range(REQ_RESP_TIME_KEY + "get_orders")), float(success))
 
