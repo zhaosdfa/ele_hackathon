@@ -18,8 +18,8 @@ public class OrderServlet extends HttpServlet {
     public void service(HttpServletRequest req, HttpServletResponse res)
 	throws ServletException, IOException
     {
+//	long start = System.currentTimeMillis();
 	try {
-
 	    res.setCharacterEncoding("utf-8");
 
 	    ResponseResult result = _handle(req, res);
@@ -33,6 +33,7 @@ public class OrderServlet extends HttpServlet {
 	} catch (Exception e) {
 	    Utils.print(e);
 	}
+//	long end = System.currentTimeMillis();
     }
 
     public ResponseResult _handle(HttpServletRequest req, HttpServletResponse res)
