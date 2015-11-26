@@ -29,20 +29,32 @@ public class CartDAO {
 
 	String cartId = jedis.incr(KEY_CART_ID).toString();
 
-	jedis.set(KEY_CART_USR + cartId, ""+userId);
+	Pipeline pipe = jedis.pipelined();
+
+	pipe.set(KEY_CART_USR + cartId, ""+userId);
+
+	// faster than jedis.set
+	pipe.sync();
 
 	RedisClient.returnResource(jedis);
 	return cartId;
     }
 
+    //private static Map<String, String> CartHolder = new HashMap<String, String>();
+
     /**
      * return null if not exists.
      */
     public static String getUserId(String cartId) {
+	//String userId = CartHolder.get(cartId);
+	//if (userId != null) {
+	//    return userId;
+	//}
 	Jedis jedis = RedisClient.getResource();
-	String id = jedis.get(KEY_CART_USR + cartId);
+	String userId = jedis.get(KEY_CART_USR + cartId);
 	RedisClient.returnResource(jedis);
-	return id;
+	//CartHolder.put(cartId, userId);
+	return userId;
     }
 
     // TODO
@@ -113,8 +125,8 @@ public class CartDAO {
 
     public static Result tryOrder(String cartId, int userId) {
 //	return _tryOrderInterface(cartId, userId);
-//	return _tryOrderV2Interface(cartId, userId);
-	return _tryOrderV3Interface(cartId, userId);
+	return _tryOrderV2Interface(cartId, userId);
+//	return _tryOrderV3Interface(cartId, userId);
     }
 
     private static final int TRY_ORDER_LIMIT = 3; // times of try order
@@ -291,6 +303,7 @@ public class CartDAO {
 	ord.put("total", total);
 	ord.put("items", items);
 
+	// MARK 
 	jedis.lpush(KEY_ALL_ORDERS, ord.toString());
 
 	return Result.OK;

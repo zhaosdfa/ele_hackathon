@@ -35,6 +35,26 @@ public class FoodsServlet extends HttpServlet {
 	}
     }
 
+    static {
+	flush();
+    }
+
+    private static String cachedStock;
+    private static int cachedTimes = 0;
+    private static void flush () {
+	List<Food> list = FoodsDAO.getAllFoods();
+	JSONArray foods = new JSONArray();
+	int count = 0;
+	for (Food food : list) {
+	    JSONObject obj = new JSONObject();
+	    obj.put("id", food.getId());
+	    obj.put("price", food.getPrice());
+	    obj.put("stock", food.getStock());
+	    foods.put(count++, obj);
+	}
+	cachedStock = foods.toString();
+    }
+
     public ResponseResult _handle(HttpServletRequest req, HttpServletResponse res)
 	throws ServletException, IOException
     {
@@ -51,18 +71,10 @@ public class FoodsServlet extends HttpServlet {
 	    obj.put("message", "无效的令牌");
 	    return new ResponseResult(401, obj.toString());
 	}
-//	List<Food> list = FoodsDAO.getAllFoods();
-	List<Food> list = FoodsDAO.getAllFoodsV2();
-	JSONArray foods = new JSONArray();
-	int count = 0;
-	for (Food food : list) {
-	    JSONObject obj = new JSONObject();
-	    obj.put("id", food.getId());
-	    obj.put("price", food.getPrice());
-	    obj.put("stock", food.getStock());
-	    foods.put(count++, obj);
+	if (++cachedTimes % 2000 == 0) {
+	    flush();
 	}
-	return new ResponseResult(200, foods.toString());
+	return new ResponseResult(200, cachedStock);
     }
 
 

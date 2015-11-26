@@ -38,7 +38,7 @@ public class CartServlet extends HttpServlet {
 	    if (responseMsg != null && !responseMsg.equals("")) {
 		res.getWriter().println(responseMsg);
 	    }
-	    res.getWriter().close();
+	    //res.getWriter().close();
 
 	    //Utils.println("code: " + result.getCode() + " " + responseMsg);
 	} catch (Exception e) {
