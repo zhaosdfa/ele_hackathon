@@ -1,0 +1,11 @@
+curl -d "{\"username\":\"root\", \"password\":\"toor\"}" 127.0.0.1:8080/login
+
+curl --request "POST" 127.0.0.1:8080/carts?access_token=63A9F0EA7BB98050796B649E85481845
+
+{"cart_id":"1"}
+
+curl --request "PATCH" 127.0.0.1:8080/carts/1?access_token=63A9F0EA7BB98050796B649E85481845 -d "{\"food_id\":1,\"count\":1}" -i
+
+curl --request "POST" 127.0.0.1:8080/orders?access_token=63A9F0EA7BB98050796B649E85481845 -d "{\"cart_id\":\"1\"}"
+
+curl 127.0.0.1:8080/orders?access_token=63A9F0EA7BB98050796B649E85481845
