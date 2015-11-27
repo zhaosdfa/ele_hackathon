@@ -14,7 +14,7 @@ import (
 
 const (
 	alpha               = string("abcdefghijklmnopqrstuvwxyz")
-	KEY_FOOD_STOCK_init = "food_stock_init"
+	KEY_FOOD_STOCK_INIT = "food_stock_init"
 	KEY_FOOD_STOCK      = "food_stock:"
 )
 
@@ -24,7 +24,7 @@ func loadUser(db *sql.DB) {
 
 	rows, err := db.Query("select * from user")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer rows.Close()
 
@@ -44,7 +44,7 @@ func loadUser(db *sql.DB) {
 		AccessTokenToUser[accessToken] = user
 	}
 	if err = rows.Err(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -53,14 +53,14 @@ func loadFood(db *sql.DB) {
 
 	rows, err := db.Query("select * from food")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer rows.Close()
 
 	con := util.RedisPool.Get()
 	defer con.Close()
 
-	init, _ := redis.Int(con.Do("incr", KEY_FOOD_STOCK_init))
+	init, _ := redis.Int(con.Do("incr", KEY_FOOD_STOCK_INIT))
 	var id int
 	var stock int
 	var price int
@@ -70,25 +70,24 @@ func loadFood(db *sql.DB) {
 			con.Send("set", KEY_FOOD_STOCK+strconv.Itoa(id), stock)
 		}
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		FoodList.Foods = append(FoodList.Foods, Food{id, stock, price})
 		IdToPrice[id] = price
 	}
 	if err = rows.Err(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	if init == 1 {
 		err = con.Flush()
 		if err != nil {
-			log.Fatal("init stock err : ", err)
+			log.Println("init stock err : ", err)
 		}
 	}
 
 }
 func init() {
-
 	db_name := os.Getenv("DB_NAME")
 	db_host := os.Getenv("DB_HOST")
 	db_port := os.Getenv("DB_PORT")
@@ -97,7 +96,6 @@ func init() {
 
 	mesg := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", db_user, db_pass, db_host, db_port, db_name)
 	//open driven name,and message
-	//db, err := sql.Open("mysql", db_user+":"+db_pass+"@tcp("+db_host+":"+db_port+")/"+db_name)
 	db, err := sql.Open("mysql", mesg)
 	if err != nil {
 		log.Fatalf("open database error : %s\n", err)

@@ -84,7 +84,6 @@ func addFood(user model.User, food_id int, food_count int, cartId string) Repons
 	}
 
 	if food_count > 3 || tryAddFood(cartId, food_id, food_count) == false {
-		log.Println("exceed 3")
 		r = ReponseResult{403, "FOOD_OUT_OF_LIMIT", "篮子中食物数量超过了三个"}
 		return r
 	}
@@ -94,18 +93,18 @@ func addFood(user model.User, food_id int, food_count int, cartId string) Repons
 }
 
 func CartHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("in cartHandler, url = ", r.URL)
+	//log.Println("in cartHandler, url = ", r.URL)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal("read err : ", err)
+		log.Println("read err : ", err)
 	}
 	if err = r.Body.Close(); err != nil {
-		log.Fatal("close err body err :", err)
+		log.Println("close err body err :", err)
 	}
 	var para FoodPara
 	if len(body) != 0 {
 		if err = json.Unmarshal(body, &para); err != nil {
-			log.Fatal("unmarshal err ", err)
+			log.Println("unmarshal err ", err)
 		}
 	}
 	cartId := mux.Vars(r)["cartId"]
@@ -125,7 +124,7 @@ func CartHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(401)
 		res := Result{"INVALID_ACCESS_TOKEN", "无效的令牌"}
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		return
 	}
@@ -136,7 +135,7 @@ func CartHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		ans := CartIdStruct{cartId}
 		if err := json.NewEncoder(w).Encode(ans); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	} else if r.Method == "PATCH" {
 		//log.Println("should be path method ", r.Method)
@@ -148,7 +147,7 @@ func CartHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(res2.Status)
 			res3 := Result{res2.Code, res2.Message}
 			if err := json.NewEncoder(w).Encode(res3); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			return
 		}

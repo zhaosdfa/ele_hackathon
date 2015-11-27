@@ -9,7 +9,7 @@ import (
 )
 
 func FoodHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("in foodhandler,url = ", r.URL)
+	//log.Println("in foodhandler,url = ", r.URL)
 	r.ParseForm()
 	var accessToken string
 	if len(r.Form["access_token"]) > 0 {
@@ -24,7 +24,7 @@ func FoodHandler(w http.ResponseWriter, r *http.Request) {
 		if _, ok := model.AccessTokenToUser[accessToken]; ok == true {
 			w.WriteHeader(200)
 			if err := json.NewEncoder(w).Encode(model.FoodList.Foods); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			return
 		}
@@ -33,6 +33,6 @@ func FoodHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(401)
 	res = Result{"INVALID_ACCESS_TOKEN", "无效的令牌"}
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }

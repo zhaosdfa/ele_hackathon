@@ -26,14 +26,14 @@ type ResultOk struct {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("in loginhander, url = ", r.URL)
+	//log.Println("in loginhander, url = ", r.URL)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal("read err", err)
+		log.Println("read err:", err)
 	}
 
 	if err = r.Body.Close(); err != nil {
-		log.Fatal("close err : ", err)
+		log.Println("close err : ", err)
 	}
 	//w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	var res Result
@@ -41,7 +41,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		res = Result{"EMPTY_REQUEST", "请求体为空"}
 		if err = json.NewEncoder(w).Encode(res); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		return
 	}
@@ -51,18 +51,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		res = Result{"MALFORMED_JSON", "格式错误"}
 		if err = json.NewEncoder(w).Encode(res); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		return
 	}
 
 	user, ok := model.NameToUser[para.Username]
 	if ok == false || user.Password != para.Password {
-		log.Println("loginhandler password error")
 		w.WriteHeader(403)
 		res = Result{"USER_AUTH_FAIL", "用户名或密码错误"}
 		if err = json.NewEncoder(w).Encode(res); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		return
 	}
@@ -70,6 +69,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	ans := ResultOk{user.Id, user.Name, user.AccessToken}
 	w.WriteHeader(200)
 	if err = json.NewEncoder(w).Encode(ans); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }

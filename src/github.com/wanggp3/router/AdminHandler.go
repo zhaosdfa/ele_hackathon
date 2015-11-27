@@ -22,7 +22,7 @@ type AdminOderStruct struct {
 }
 
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("in Adminhandler,url = ", r.URL)
+	//	log.Println("in Adminhandler,url = ", r.URL)
 	r.ParseForm()
 	var accessToken string
 	if len(r.Form["access_token"]) > 0 {
@@ -50,13 +50,13 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 				var x AdminOderStruct
 				err = json.Unmarshal(d, &x)
 				if err != nil {
-					log.Fatal("!! ", err)
+					log.Println("jiexi chu cuo in admin!! ", err)
 				}
 				obj = append(obj, x)
 			}
 
 			if err := json.NewEncoder(w).Encode(obj); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			/*var ans = make([]AdminOderStruct)
 			for _, v := range data {
@@ -72,6 +72,6 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(401)
 	res = Result{"INVALID_ACCESS_TOKEN", "无效的令牌"}
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
