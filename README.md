@@ -1,13 +1,3 @@
-Quick start:
-
-```bash
-git clone https://hackhub.ele.me/eleme/hackathon-go.git
-cd hackathon-go
-vagrant up
-```
-
-Visit `localhost:8080` for "Hello World!".
-=======
 # Eleme Hackathon Intro
 
 饿了么 Hackathon 2015 初赛信息介绍。
