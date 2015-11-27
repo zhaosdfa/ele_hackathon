@@ -3,11 +3,14 @@
 
 Vagrant.configure(2) do |config|
 
-  config.vm.box = "http://hackathon-cdn.ele.me/hackathon-go-v0.1.0.vbox"
+  # uncomment the lang you use
+  #config.vm.box = "http://hackathon-cdn.ele.me/hackathon-py-0.1.0.vbox"
+  config.vm.box = "http://hackathon-cdn.ele.me/hackathon-java-v0.1.0.vbox"
+  #config.vm.box = "http://hackathon-cdn.ele.me/hackathon-go-v0.1.0.vbox"
 
   # config.vm.box_check_update = false
   config.vm.provider "virtualbox" do |vb|
-    vb.name = "eleme-hackathon-go"
+    vb.name = "eleme-hackathon"
     vb.cpus = 2
     vb.memory = "1024"
   end

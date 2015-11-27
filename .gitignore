@@ -1,0 +1,11 @@
+/.vagrant/*
+/target/*
+.gitignore
+*.log
+*.class
+*.swp
+*.txt~
+tests/__pycache__/*
+tests/.cache/*
+tests/conftest.pyc
+Vagrantfile
