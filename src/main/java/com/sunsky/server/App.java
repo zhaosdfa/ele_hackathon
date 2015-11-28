@@ -12,80 +12,80 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 public class App {
 
-    public static void main( String[] args ) {
+	public static void main( String[] args ) {
 
-	try {
+		try {
 
-	    System.out.println("loading...");
-	    UserDAO dao = new UserDAO();
-	    FoodsDAO fd = new FoodsDAO();
-	    LuaScript ls = new LuaScript();
-	    System.out.println("loaded");
-
-
-	    int port = 8080;
-	    try {
-		port = Integer.parseInt(System.getenv("APP_PORT"));
-	    } catch (Exception e) {
-		e.printStackTrace();
-	    }
-
-	    // Setup Threadpool
-	    QueuedThreadPool threadPool = new QueuedThreadPool();
-//	    threadPool.setMaxThreads(500);
-	    threadPool.setMinThreads(10);
-
-	    // HTTP Configuration
-	    HttpConfiguration http_config = new HttpConfiguration();
-	    //http_config.setSecureScheme("https");
-	    //http_config.setSecurePort(8443);
-	    http_config.setOutputBufferSize(32768);
-	    http_config.setRequestHeaderSize(1024);
-	    http_config.setResponseHeaderSize(1024);
-	    http_config.setSendServerVersion(false);
-	    http_config.setSendDateHeader(false);
-	    // httpConfig.addCustomizer(new ForwardedRequestCustomizer());
+			System.out.println("loading...");
+			UserDAO dao = new UserDAO();
+			FoodsDAO fd = new FoodsDAO();
+			LuaScript ls = new LuaScript();
+			System.out.println("loaded");
 
 
-//	    Server server = new Server(port);
-	    Server server = new Server(threadPool);
+			int port = 8080;
+			try {
+				port = Integer.parseInt(System.getenv("APP_PORT"));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
-	    // Extra options
-	    server.setDumpAfterStart(false);
-	    server.setDumpBeforeStop(false);
+			// Setup Threadpool
+			QueuedThreadPool threadPool = new QueuedThreadPool();
+			//threadPool.setMaxThreads(400);
+			//threadPool.setMinThreads(100);
 
-	    //SelectChannelConnector connector = new SelectChannelConnector();
-//	    NetworkTrafficSelectChannelConnector connector = new NetworkTrafficSelectChannelConnector(server);
-//	    connector.setPort(port);
-//	    connector.setHost(System.getenv("APP_HOST"));
-
-	    // === jetty-http.xml ===
-	    ServerConnector http = new ServerConnector(server,
-		    new HttpConnectionFactory(http_config));
-	    http.setPort(port);
-	    http.setIdleTimeout(10000);
-
-	    server.addConnector(http);
+			// HTTP Configuration
+			HttpConfiguration http_config = new HttpConfiguration();
+			//http_config.setSecureScheme("https");
+			//http_config.setSecurePort(8443);
+			http_config.setOutputBufferSize(32768);
+			http_config.setRequestHeaderSize(1024);
+			http_config.setResponseHeaderSize(1024);
+			http_config.setSendServerVersion(false);
+			http_config.setSendDateHeader(false);
+			// httpConfig.addCustomizer(new ForwardedRequestCustomizer());
 
 
-	    ServletHandler handler = new ServletHandler();
-	    server.setHandler(handler);
+			//	    Server server = new Server(port);
+			Server server = new Server(threadPool);
 
-	    handler.addServletWithMapping(LoginServlet.class, "/login");
-	    handler.addServletWithMapping(FoodsServlet.class, "/foods");
-	    handler.addServletWithMapping(CartServlet.class, "/carts");
-	    handler.addServletWithMapping(CartServlet.class, "/carts/*");
-	    handler.addServletWithMapping(OrderServlet.class, "/orders");
-	    handler.addServletWithMapping(AdminServlet.class, "/admin/orders");
+			// Extra options
+			server.setDumpAfterStart(false);
+			server.setDumpBeforeStop(false);
 
-	    server.start();
-	    server.join();
+			//SelectChannelConnector connector = new SelectChannelConnector();
+			//	    NetworkTrafficSelectChannelConnector connector = new NetworkTrafficSelectChannelConnector(server);
+			//	    connector.setPort(port);
+			//	    connector.setHost(System.getenv("APP_HOST"));
 
-	    System.out.println("server started");
+			// === jetty-http.xml ===
+			ServerConnector http = new ServerConnector(server,
+					new HttpConnectionFactory(http_config));
+			http.setPort(port);
+			//http.setIdleTimeout(10000);
 
-	} catch (Exception e) {
-	    e.printStackTrace();
+			server.addConnector(http);
+
+
+			ServletHandler handler = new ServletHandler();
+			server.setHandler(handler);
+
+			handler.addServletWithMapping(LoginServlet.class, "/login");
+			handler.addServletWithMapping(FoodsServlet.class, "/foods");
+			handler.addServletWithMapping(CartServlet.class, "/carts");
+			handler.addServletWithMapping(CartServlet.class, "/carts/*");
+			handler.addServletWithMapping(OrderServlet.class, "/orders");
+			handler.addServletWithMapping(AdminServlet.class, "/admin/orders");
+
+			server.start();
+			server.join();
+
+			System.out.println("server started");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
-
-    }
 }

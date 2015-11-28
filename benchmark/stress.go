@@ -131,7 +131,7 @@ type ResponseMakeOrder struct {
 var (
 	users           = make([]User, 0)    // users
 	foods           = make(map[int]Food) // map[food.Id]food
-	isDebugMode     = false
+	isDebugMode     = true 
 	isReportToRedis = false
 )
 
