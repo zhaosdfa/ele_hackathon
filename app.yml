@@ -1,3 +1,4 @@
-language: go
+language: java
 script:
-    - GOPATH=/vagrant go run src/github.com/wanggp3/main.go
+      - mvn clean package
+      - java -jar "./target/server-1.0-SNAPSHOT.jar" -server -Xms2g -Xmx2g -Xmn768m -Dfile.encoding=utf-8
