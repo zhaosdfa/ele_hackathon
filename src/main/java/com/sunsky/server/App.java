@@ -32,7 +32,7 @@ public class App {
 
 			// Setup Threadpool
 			QueuedThreadPool threadPool = new QueuedThreadPool();
-			threadPool.setMaxThreads(400);
+			threadPool.setMaxThreads(300);
 			threadPool.setMinThreads(100);
 
 			// HTTP Configuration
