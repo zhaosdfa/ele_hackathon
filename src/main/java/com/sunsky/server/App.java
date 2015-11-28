@@ -32,8 +32,8 @@ public class App {
 
 			// Setup Threadpool
 			QueuedThreadPool threadPool = new QueuedThreadPool();
-			//threadPool.setMaxThreads(400);
-			//threadPool.setMinThreads(100);
+			threadPool.setMaxThreads(400);
+			threadPool.setMinThreads(100);
 
 			// HTTP Configuration
 			HttpConfiguration http_config = new HttpConfiguration();
@@ -63,7 +63,7 @@ public class App {
 			ServerConnector http = new ServerConnector(server,
 					new HttpConnectionFactory(http_config));
 			http.setPort(port);
-			//http.setIdleTimeout(10000);
+			http.setIdleTimeout(10000);
 
 			server.addConnector(http);
 
