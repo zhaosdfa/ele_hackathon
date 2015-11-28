@@ -8,9 +8,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 )
 
 func main() {
+	cpu := runtime.NumCPU()
+	runtime.GOMAXPROCS(cpu)
 	host := os.Getenv("APP_HOST")
 	port := os.Getenv("APP_PORT")
 	if host == "" {
