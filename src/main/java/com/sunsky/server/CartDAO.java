@@ -148,8 +148,8 @@ public class CartDAO {
     public enum Result {OK, OUT_OF_LIMIT, OUT_OF_STOCK, FAIL};
 
     public static Result tryOrder(String cartId, int userId) {
-        //	return _tryOrderInterface(cartId, userId);
-        return _tryOrderV2Interface(cartId, userId);
+        return _tryOrderInterface(cartId, userId);
+        //return _tryOrderV2Interface(cartId, userId);
         //	return _tryOrderV3Interface(cartId, userId);
     }
 
