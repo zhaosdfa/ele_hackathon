@@ -13,8 +13,8 @@ func newPool() *redis.Pool {
 	redis_host := os.Getenv("REDIS_HOST")
 	redis_port := os.Getenv("REDIS_PORT")
 	return &redis.Pool{
-		MaxIdle: 15,
-		//MaxActive:   33,
+		MaxIdle: 200,
+		//MaxActive:   400,
 		IdleTimeout: 40 * time.Second,
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", redis_host+":"+redis_port)
