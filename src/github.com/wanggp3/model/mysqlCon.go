@@ -87,7 +87,12 @@ func loadFood(db *sql.DB) {
 	}
 
 }
-func init() {
+
+var (
+    DB *sql.DB
+)
+
+func InitMySQL() {
 	db_name := os.Getenv("DB_NAME")
 	db_host := os.Getenv("DB_HOST")
 	db_port := os.Getenv("DB_PORT")
@@ -96,21 +101,36 @@ func init() {
 
 	mesg := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", db_user, db_pass, db_host, db_port, db_name)
 	//open driven name,and message
-	db, err := sql.Open("mysql", mesg)
+    var err error
+	DB, err = sql.Open("mysql", mesg)
 	if err != nil {
 		log.Fatalf("open database error : %s\n", err)
 		return
 	}
-	defer db.Close()
+	defer DB.Close()
+
+//    DB.SetMaxOpenConns(266);
+//    DB.SetMaxIdleConns(150);
 
 	//test ping-pong
-	err = db.Ping()
+	err = DB.Ping()
 	if err != nil {
 		log.Fatal("ping database error : %s\n", err)
 		return
 	}
 
-	loadUser(db)
+    /*
+    _, err = DB.Exec("DROP TABLE IF EXISTS cart_owner");
+    if err != nil {
+        log.Fatal(err)
+    }
+    _, err = DB.Exec("CREATE TABLE IF NOT EXISTS cart_owner (id INT PRIMARY KEY AUTO_INCREMENT, user_id INT)");
+    if err != nil {
+        log.Fatal(err)
+    }
+    */
 
-	loadFood(db)
+	loadUser(DB)
+
+	loadFood(DB)
 }

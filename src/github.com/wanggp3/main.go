@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/wanggp3/router"
+    "github.com/wanggp3/router"
+    "github.com/wanggp3/model"
 	_ "github.com/wanggp3/util"
 	"log"
 	"net/http"
@@ -13,6 +14,9 @@ import (
 
 func main() {
 	cpu := runtime.NumCPU()
+    if cpu < 2 {
+        cpu = 2
+    }
 	runtime.GOMAXPROCS(cpu)
 	host := os.Getenv("APP_HOST")
 	port := os.Getenv("APP_PORT")
@@ -24,6 +28,9 @@ func main() {
 	}
 	addr := fmt.Sprintf("%s:%s", host, port)
 
+    model.InitMySQL();
+
+
 	log.Println("add router")
 	r := mux.NewRouter()
 	r.HandleFunc("/login", router.LoginHandler)
@@ -34,6 +41,6 @@ func main() {
 	r.HandleFunc("/admin/orders", router.AdminHandler)
 	log.Println("add router end, server start")
 
-	err := http.ListenAndServe(addr, r)
+    err := http.ListenAndServe(addr, r)
 	log.Fatal(err)
 }

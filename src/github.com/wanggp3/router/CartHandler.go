@@ -36,6 +36,23 @@ type FoodPara struct {
 }
 
 func createCart(user model.User) string {
+    /*
+    stmt, err := model.DB.Prepare("INSERT INTO cart_owner(user_id) VALUES(?)")
+    defer stmt.Close()
+    if err != nil {
+        log.Fatal(err)
+    }
+    res, err := stmt.Exec(user.Id)
+    if err != nil {
+        log.Fatal(err)
+    }
+    cartId, err := res.LastInsertId()
+    if err != nil {
+        log.Fatal(err)
+    }
+    return strconv.Itoa(int(cartId))
+    */
+
 	con := util.RedisPool.Get()
 	defer con.Close()
 
@@ -67,6 +84,26 @@ func addFood(user model.User, food_id int, food_count int, cartId string) Repons
 	con := util.RedisPool.Get()
 	defer con.Close()
 	var r ReponseResult
+
+    /*
+    rows, err := model.DB.Query("SELECT user_id FROM cart_owner WHERE id=?", cartId)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer rows.Close()
+
+    var uid int
+    if rows.Next() {
+        err = rows.Scan(&uid)
+        if err != nil {
+            log.Fatal(err)
+        }
+    } else {
+		r = ReponseResult{404, "CART_NOT_FOUND", "篮子不存在"}
+		return r
+    }
+    */
+
 	uid, ok := redis.Int(con.Do("get", KEY_CART_USER+cartId))
 	if ok != nil {
 		r = ReponseResult{404, "CART_NOT_FOUND", "篮子不存在"}
